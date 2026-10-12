@@ -1,0 +1,30 @@
+{
+  "name": "shree-pharma-1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shree Pharma website and email dashboard on Cloudflare Workers",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "4.144.0"
+  },
+  "type": "module",
+  "cloudflare": {
+    "bindings": {
+      "DB": {
+        "description": "The database that stores your leads and settings. Keep the suggested name."
+      },
+      "ADMIN_PASSWORD": {
+        "description": "Choose the password for your private dashboard. Use at least 12 characters and keep it safe."
+      },
+      "GOOGLE_CLIENT_ID": {
+        "description": "Type **add-later** for now. You will paste the real value from Google Cloud in Part 5 of the setup guide."
+      },
+      "GOOGLE_CLIENT_SECRET": {
+        "description": "Type **add-later** for now. You will paste the real value from Google Cloud in Part 5 of the setup guide."
+      }
+    }
+  }
+}

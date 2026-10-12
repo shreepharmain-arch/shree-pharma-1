@@ -1,0 +1,3 @@
+ADMIN_PASSWORD=choose-a-strong-password # Password for your private dashboard (at least 12 characters)
+GOOGLE_CLIENT_ID=add-later # Paste from Google Cloud later (setup guide Part 5)
+GOOGLE_CLIENT_SECRET=add-later # Paste from Google Cloud later (setup guide Part 5)

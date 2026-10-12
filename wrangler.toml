@@ -1,0 +1,29 @@
+# Shree Pharma: website + email dashboard on one Cloudflare Worker.
+# You do not need to edit this file. The "Deploy to Cloudflare" button creates the database
+# and fills in database_id automatically.
+name = "shree-pharma-1"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+preview_urls = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "shree-pharma-db"
+database_id = "d5804283-f4b9-4392-ba89-2f240ce6a730"
+
+# Runs the outreach timer every 10 minutes (drafts, sending, replies)
+[triggers]
+crons = ["*/10 * * * *"]
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[observability]
+enabled = true
