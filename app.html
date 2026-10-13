@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#c8165e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Shree Pharma">
+<title>Shree Pharma Dashboard</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/app/manifest.webmanifest">
+<style>
+:root{--ink:#1b1d2b;--magenta:#c8165e;--deep:#9c0f48;--blush:#fbe9f0;--rule:#e3e1e6;--mute:#5c5f6e;--bg:#f7f6f8;--ok:#11603a;--okbg:#e8f5ee;--err:#a3122f;--errbg:#fdecef;--warn:#8a4b00;--warnbg:#fff3e0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+a{color:var(--deep)}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+header{background:#fff;border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;white-space:nowrap}
+.logo i{width:8px;height:18px;background:var(--magenta);border-radius:2px 2px 5px 5px;display:block}
+.pill{font-size:12px;font-weight:600;border-radius:20px;padding:3px 10px;background:var(--okbg);color:var(--ok);max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill.off{background:var(--errbg);color:var(--err)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:1;text-align:center;padding:10px 8px;text-decoration:none;color:var(--mute);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;min-width:72px}
+nav.tabs a.on{color:var(--ink);border-bottom-color:var(--magenta)}
+nav.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--magenta);color:#fff;font-size:11px;line-height:18px}
+main{padding-bottom:70px}
+h2{font-size:17px;margin:0 0 10px}
+h3{font-size:15px;margin:16px 0 8px}
+.card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px;margin-top:14px;min-width:0}
+.muted{color:var(--mute);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.stat{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:12px;min-width:0}
+.stat b{display:block;font-size:24px;line-height:1.15}
+.stat span{font-size:12.5px;color:var(--mute)}
+.stat.hi b{color:var(--magenta)}
+button,.btn{font-family:inherit;font-weight:600;font-size:14px;border-radius:8px;border:1.5px solid var(--magenta);background:var(--magenta);color:#fff;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px}
+button:hover,.btn:hover{background:var(--deep);border-color:var(--deep)}
+button.line,.btn.line{background:#fff;color:var(--ink);border-color:#b9b6c2}
+button.line:hover,.btn.line:hover{border-color:var(--ink)}
+button.ghost{background:none;border:none;color:var(--deep);padding:6px 8px;min-height:0}
+button.danger{background:#fff;color:var(--err);border-color:#e7a5b1}
+button:disabled{opacity:.55;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.list{border-top:1px solid var(--rule);margin-top:10px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--rule);min-width:0}
+.item input[type=checkbox]{margin-top:3px;width:20px;height:20px;accent-color:var(--magenta);flex:none}
+.item .t{flex:1;min-width:0}
+.item .t b,.item .t .one{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .t small{color:var(--mute);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .t .wrapline{white-space:normal;overflow-wrap:anywhere}
+.item.click{cursor:pointer}
+.item.click:hover{background:#fcfbfc}
+.tag{font-size:11px;font-weight:700;background:var(--blush);color:var(--deep);border-radius:20px;padding:1px 8px;white-space:nowrap}
+.tag.g{background:var(--okbg);color:var(--ok)}
+.tag.grey{background:#efeef2;color:var(--mute)}
+.empty{color:var(--mute);padding:14px 0}
+.alert{border-radius:10px;padding:10px 14px;margin-top:12px;font-weight:600;font-size:14px}
+.alert.ok{background:var(--okbg);color:var(--ok)}
+.alert.err{background:var(--errbg);color:var(--err)}
+.alert.warn{background:var(--warnbg);color:var(--warn);font-weight:500}
+.alert .row{margin-top:8px}
+label{font-weight:600;font-size:13px;display:block;margin:12px 0 5px}
+input[type=text],input[type=email],input[type=number],input[type=search],input[type=url],input[type=file],select,textarea{width:100%;padding:10px;border:1px solid #b9b6c2;border-radius:8px;font:inherit;font-size:16px;background:#fff;color:var(--ink);min-width:0}
+textarea{min-height:240px;resize:vertical;font-size:14px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--magenta);box-shadow:0 0 0 3px rgba(200,22,94,.15)}
+.help{font-size:12.5px;color:var(--mute);margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-top:6px}
+.pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:8px 0}
+.kv dt{color:var(--mute)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+dialog{border:none;border-radius:14px;padding:0;width:min(640px,94vw);max-height:88vh}
+dialog::backdrop{background:rgba(20,20,30,.45)}
+.dlg{padding:16px}
+.dlg pre{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.55;background:var(--bg);border-radius:8px;padding:12px;max-height:55vh;overflow:auto;margin:8px 0 0}
+.counts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mute)}
+.progress{height:8px;background:#efeef2;border-radius:6px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;background:var(--magenta);width:0;transition:width .2s}
+.savebar{position:sticky;bottom:0;background:linear-gradient(rgba(247,246,248,0),var(--bg) 30%);padding:18px 0 calc(10px + env(safe-area-inset-bottom));margin-top:6px}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--bg);padding:6px 8px;border-radius:6px;display:block;overflow-wrap:anywhere;margin-top:4px}
+.ph{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--bg);border-radius:5px;padding:1px 6px;margin:2px 4px 2px 0;cursor:pointer;border:1px solid var(--rule)}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.err{background:var(--err)}
+@media(max-width:640px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid2,.filters{grid-template-columns:1fr}
+  .stat b{font-size:22px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <div class="logo"><i></i>Shree Pharma</div>
+    <span class="pill" id="gpill">Loading…</span>
+  </div>
+  <div class="wrap">
+    <nav class="tabs" aria-label="Sections">
+      <a href="#home" data-tab="home">Home</a>
+      <a href="#leads" data-tab="leads">Leads</a>
+      <a href="#enquiries" data-tab="enquiries">Enquiries<span class="badge" id="enqBadge" hidden></span></a>
+      <a href="#settings" data-tab="settings">Settings</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- HOME -->
+<section id="tab-home" data-panel="home">
+  <div id="banners"></div>
+  <div class="stats">
+    <div class="stat hi"><b id="sReady">–</b><span>Ready to approve</span></div>
+    <div class="stat"><b id="sToday">–</b><span>Sent today</span></div>
+    <div class="stat"><b id="sReplied">–</b><span>Replies</span></div>
+    <div class="stat"><b id="sNew">–</b><span>Not yet emailed</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Approve and send</h2>
+    <p class="muted" style="margin:0">These emails are saved as drafts in your Gmail. Tap a name to read one. Approved emails go out a few at a time, every 10 minutes.</p>
+    <div class="row" style="margin-top:12px">
+      <button id="sendSel">Send selected</button>
+      <button class="line" id="skipSel">Skip selected</button>
+      <button class="ghost" id="selAll">Select all</button>
+    </div>
+    <div class="list" id="readyList"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="line" id="makeDrafts">Create drafts now</button>
+      <button class="line" id="checkNow">Check replies now</button>
+      <button class="ghost" id="pauseBtn">Pause sending</button>
+    </div>
+    <div id="homeMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Recent replies</h2>
+    <div class="list" id="replyList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Recent activity</h2>
+    <div class="list" id="logList"></div>
+  </div>
+</section>
+
+<!-- LEADS -->
+<section id="tab-leads" data-panel="leads" hidden>
+  <div class="card">
+    <h2>Import leads from CSV</h2>
+    <p class="muted" style="margin:0">Any CSV with an email column works. Duplicates and people already in your list are skipped automatically.</p>
+    <label for="csv">CSV file</label>
+    <input type="file" id="csv" accept=".csv,text/csv,text/plain">
+    <label for="ctry">Country for this file</label>
+    <input type="text" id="ctry" placeholder="Used when a row has no country, e.g. United Kingdom" autocomplete="off">
+    <div class="help" id="mapInfo"></div>
+    <div class="row" style="margin-top:12px"><button id="importBtn" disabled>Import leads</button></div>
+    <div class="progress" id="impBar" hidden><i></i></div>
+    <div id="importMsg"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">All leads <span class="muted" id="leadTotal"></span></h2><button class="line" id="exportBtn">Download CSV</button></div>
+    <div class="filters">
+      <input type="search" id="lq" placeholder="Search email, company or name" aria-label="Search leads">
+      <select id="lstatus" aria-label="Filter by status"><option value="">All statuses</option></select>
+      <select id="lcountry" aria-label="Filter by country"><option value="">All countries</option></select>
+    </div>
+    <div class="list" id="leadList"></div>
+    <div class="pager"><button class="line" id="prevPg">Previous</button><span class="muted" id="pgInfo"></span><button class="line" id="nextPg">Next</button></div>
+  </div>
+</section>
+
+<!-- ENQUIRIES -->
+<section id="tab-enquiries" data-panel="enquiries" hidden>
+  <div class="card">
+    <h2>Website quote requests</h2>
+    <p class="muted" style="margin:0">Requests from the quote form on your website. Mark them Replied or Closed to keep this list tidy.</p>
+    <div class="list" id="enqList"></div>
+    <div class="pager"><button class="line" id="ePrev">Previous</button><span class="muted" id="ePg"></span><button class="line" id="eNext">Next</button></div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section id="tab-settings" data-panel="settings" hidden>
+  <div class="card">
+    <h2>Gmail connection</h2>
+    <div id="gmailBox" class="muted">Loading…</div>
+    <div class="row" style="margin-top:12px">
+      <a class="btn" id="connectBtn" href="/app/oauth/start">Connect Gmail</a>
+      <button class="line" id="testBtn">Send me a test email</button>
+      <button class="danger" id="disconnectBtn">Disconnect</button>
+    </div>
+    <div id="gmailMsg"></div>
+    <details style="margin-top:14px"><summary class="muted">Setup details for Google Cloud</summary>
+      <p class="help">Authorized redirect URI to add in Google Cloud (add one for each address you open this dashboard from):</p>
+      <code class="code" id="redirUri"></code>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Phone notifications</h2>
+    <p class="help" style="margin-top:0">Get a pop-up on this phone or computer when a buyer replies, a website quote request arrives, or drafts are ready to approve.</p>
+    <div id="pushBox" class="muted">Loading…</div>
+    <div class="row" style="margin-top:12px">
+      <button type="button" id="pushOnBtn" hidden>Turn on for this device</button>
+      <button type="button" class="line" id="pushTestBtn" hidden>Send a test notification</button>
+      <button type="button" class="danger" id="pushOffBtn" hidden>Turn off for this device</button>
+    </div>
+    <div id="pushMsg"></div>
+    <div class="list" id="pushList" style="margin-top:10px"></div>
+  </div>
+
+  <form id="setForm" novalidate>
+    <div class="card">
+      <h2>Your business</h2>
+      <div class="grid2">
+        <div><label for="your_name">Your name (email signature)</label><input type="text" id="your_name" name="your_name"></div>
+        <div><label for="company_name">Company name</label><input type="text" id="company_name" name="company_name"></div>
+        <div><label for="whatsapp">WhatsApp number</label><input type="text" id="whatsapp" name="whatsapp"></div>
+        <div><label for="alert_email">Send alerts to</label><input type="email" id="alert_email" name="alert_email"><div class="help">Replies, website requests and the daily summary go here.</div></div>
+      </div>
+      <label for="address">Business postal address</label>
+      <input type="text" id="address" name="address" placeholder="Street, city, state, PIN, India">
+      <div class="help">Shown in your email signature. US law requires a postal address in marketing emails.</div>
+      <div class="grid2">
+        <div><label for="website">Website address</label><input type="url" id="website" name="website" placeholder="Leave empty to use automatically"><div class="help" id="autoWeb"></div></div>
+        <div><label for="brochure_link">Brochure link</label><input type="url" id="brochure_link" name="brochure_link" placeholder="Leave empty to use automatically"><div class="help" id="autoBro"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Sending</h2>
+      <div class="grid2">
+        <div><label for="daily_limit">Emails per day (first emails + follow-ups)</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="150" inputmode="numeric"><div class="help">Start at 20. Raise slowly: 35, 50, 70, 90.</div></div>
+        <div><label for="followup_days">Follow up after (business days)</label><input type="number" id="followup_days" name="followup_days" min="1" max="30" inputmode="numeric"></div>
+        <div><label for="stop_days">Mark "No reply" after the follow-up (business days)</label><input type="number" id="stop_days" name="stop_days" min="1" max="60" inputmode="numeric"></div>
+        <div><label for="auto_drafts">Prepare drafts automatically</label><select id="auto_drafts" name="auto_drafts"><option value="yes">Yes, every weekday from 9 AM</option><option value="no">No, only when I tap Create drafts</option></select></div>
+        <div><label for="paused">Sending</label><select id="paused" name="paused"><option value="no">On</option><option value="yes">Paused</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Email templates</h2>
+      <p class="help" style="margin-top:0">Words in double curly brackets fill in for each lead. Tap one to copy it: <span id="phList"></span></p>
+      <label for="tpl_first_subject">First email: subject</label>
+      <input type="text" id="tpl_first_subject" name="tpl_first_subject">
+      <label for="tpl_first_body">First email: text</label>
+      <textarea id="tpl_first_body" name="tpl_first_body"></textarea>
+      <div class="row" style="margin-top:6px"><button type="button" class="ghost" data-reset="tpl_first_body">Restore original text</button><button type="button" class="ghost" data-preview="first">Preview</button></div>
+      <label for="tpl_fu_body">Follow-up text (sent as a reply in the same email thread)</label>
+      <textarea id="tpl_fu_body" name="tpl_fu_body"></textarea>
+      <div class="row" style="margin-top:6px"><button type="button" class="ghost" data-reset="tpl_fu_body">Restore original text</button><button type="button" class="ghost" data-preview="fu">Preview</button></div>
+    </div>
+
+    <div class="savebar"><button type="submit" id="saveBtn" style="width:100%">Save settings</button><div id="setMsg"></div></div>
+  </form>
+
+  <div class="card">
+    <h2>Activity log</h2>
+    <div class="list" id="fullLog"></div>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><span class="muted">Signed in to this dashboard</span><a class="btn line" href="/app/logout">Log out</a></div>
+  </div>
+</section>
+</main>
+
+<dialog id="dlg"><div class="dlg">
+  <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b id="dTitle" style="overflow-wrap:anywhere"></b><button class="ghost" id="dClose" type="button">Close</button></div>
+  <div id="dBody"></div>
+</div></dialog>
+
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+let STATUS = {}, SUMMARY = null, SETTINGS = null, PARSED = null;
+let leadPage = 1, enqPage = 1, leadTimer = null;
+
+/* ---------- helpers ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function when(t) {
+  if (!t) return '';
+  const d = new Date(Number(t)), now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function label(st) { return STATUS[st] || st; }
+function tagClass(st) { return ['replied', 'interested', 'client', 'enquiry'].includes(st) ? 'tag g' : ['bounced', 'unsubscribed', 'dnc', 'not_interested', 'skipped', 'no_reply'].includes(st) ? 'tag grey' : 'tag'; }
+function msg(el, text, kind) {
+  el.innerHTML = text ? '<div class="alert ' + (kind || 'ok') + '" role="status">' + esc(text) + '</div>' : '';
+  if (kind === 'err') { const t = document.querySelector('.toast'); if (t) t.hidden = true; }
+}
+let toastT;
+function toast(text, bad) {
+  let t = document.querySelector('.toast');
+  if (!t) { t = document.createElement('div'); document.body.appendChild(t); }
+  t.className = 'toast' + (bad ? ' err' : ''); t.textContent = text; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600);
+}
+async function busy(btn, fn, text) {
+  const old = btn.textContent; btn.disabled = true; if (text) btn.textContent = text;
+  try { return await fn(); } finally { btn.disabled = false; btn.textContent = old; }
+}
+async function api(path, body) {
+  const opt = { method: body ? 'POST' : 'GET', headers: { 'x-sp': '1' }, credentials: 'same-origin' };
+  if (body) { opt.headers['content-type'] = 'application/json'; opt.body = JSON.stringify(body); }
+  let r;
+  try { r = await fetch(path, opt); } catch (e) { throw new Error('No internet connection. Check your connection and try again.'); }
+  if (r.status === 401) { location.href = '/app/login'; throw new Error('Please log in again.'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || ('Error ' + r.status));
+  return data;
+}
+function openDialog(title, bodyHtml) { $('dTitle').textContent = title; $('dBody').innerHTML = bodyHtml; $('dlg').showModal(); }
+$('dClose').onclick = () => $('dlg').close();
+$('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
+
+/* ---------- tabs ---------- */
+function showTab() {
+  const tab = (location.hash || '#home').slice(1).split('?')[0];
+  const t = ['home', 'leads', 'enquiries', 'settings'].includes(tab) ? tab : 'home';
+  document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t);
+  document.querySelectorAll('[data-tab]').forEach(a => { a.classList.toggle('on', a.dataset.tab === t); a.setAttribute('aria-current', a.dataset.tab === t ? 'page' : 'false'); });
+  if (t === 'home') loadHome();
+  if (t === 'leads') loadLeads();
+  if (t === 'enquiries') loadEnquiries();
+  if (t === 'settings') { loadSettings(); loadPush(); }
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', showTab);
+
+/* ---------- home ---------- */
+function setPill(g) {
+  const p = $('gpill');
+  if (g.connected && !g.problem) { p.textContent = g.email; p.className = 'pill'; }
+  else { p.textContent = g.problem ? 'Gmail needs reconnecting' : 'Gmail not connected'; p.className = 'pill off'; }
+}
+async function loadHome() {
+  let d;
+  try { d = await api('/api/summary'); } catch (e) { msg($('homeMsg'), e.message, 'err'); return; }
+  SUMMARY = d; STATUS = d.statuses || STATUS;
+  setPill(d.gmail);
+  const b = d.byStatus || {};
+  $('sReady').textContent = d.ready.length;
+  $('sToday').textContent = d.sentToday + ' / ' + d.limit;
+  $('sReplied').textContent = (b.replied || 0) + (b.interested || 0) + (b.client || 0) + (b.not_interested || 0);
+  $('sNew').textContent = b.new || 0;
+  const badge = $('enqBadge'); badge.hidden = !d.newEnquiries; badge.textContent = d.newEnquiries;
+
+  let ban = '';
+  if (!d.gmail.connected) ban += '<div class="alert warn"><b>Connect your outreach Gmail to start.</b><div class="row"><a class="btn" href="#settings">Open Settings</a></div></div>';
+  else if (d.gmail.problem) ban += '<div class="alert err">' + esc(d.gmail.problem) + '<div class="row"><a class="btn" href="/app/oauth/start">Reconnect Gmail</a></div></div>';
+  if (d.paused) ban += '<div class="alert warn"><b>Sending is paused.</b> Approved emails wait until you resume.<div class="row"><button id="resumeBtn">Resume sending</button></div></div>';
+  if (d.queued) ban += '<div class="alert ok">' + d.queued + ' approved email(s) waiting to go out. About 3 are sent every 10 minutes.</div>';
+  (d.warnings || []).forEach(w => { ban += '<div class="alert warn">' + esc(w) + '</div>'; });
+  $('banners').innerHTML = ban;
+  if ($('resumeBtn')) $('resumeBtn').onclick = () => setPaused(false);
+  $('pauseBtn').hidden = d.paused;
+
+  $('readyList').innerHTML = d.ready.length ? d.ready.map(r =>
+    '<div class="item"><input type="checkbox" class="sel" value="' + r.id + '" checked aria-label="Select ' + esc(r.company || r.email) + '">' +
+    '<div class="t"><b><a href="#" data-prev="' + r.id + '">' + esc(r.company || r.email) + '</a> ' + (r.status === 'fu_drafted' ? '<span class="tag">Follow-up</span>' : '') + '</b>' +
+    '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + '</small></div></div>').join('')
+    : '<div class="empty">' + (d.gmail.connected ? 'Nothing waiting. Tap "Create drafts now", or import leads.' : 'Connect Gmail in Settings, then import leads.') + '</div>';
+  $('sendSel').disabled = $('skipSel').disabled = !d.ready.length;
+
+  $('replyList').innerHTML = d.replies.length ? d.replies.map(r =>
+    '<div class="item"><div class="t"><b>' + esc(r.company || r.email) + ' <span class="' + tagClass(r.status) + '">' + esc(label(r.status)) + '</span></b>' +
+    '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + ' · ' + when(r.replied_at) + '</small>' +
+    (r.reply_snippet ? '<small class="wrapline">"' + esc(r.reply_snippet.slice(0, 160)) + '"</small>' : '') + '</div>' +
+    (r.thread_id && d.gmail.email ? '<a class="btn" style="min-height:36px;padding:6px 12px" target="_blank" rel="noopener" href="https://mail.google.com/mail/?authuser=' + encodeURIComponent(d.gmail.email) + '#all/' + encodeURIComponent(r.thread_id) + '">Open</a>' : '') + '</div>').join('')
+    : '<div class="empty">No replies yet. They appear here within 10 minutes.</div>';
+
+  $('logList').innerHTML = d.log.length ? d.log.map(logRow).join('') : '<div class="empty">Nothing yet.</div>';
+}
+function logRow(l) {
+  return '<div class="item"><div class="t"><span class="one"><b style="display:inline">' + esc(l.action) + '</b>' + (l.email ? ' · ' + esc(l.email) : '') + '</span>' +
+    '<small>' + when(l.at) + (l.detail ? ' · ' + esc(l.detail) : '') + '</small></div></div>';
+}
+function selected() { return [...document.querySelectorAll('.sel:checked')].map(x => Number(x.value)); }
+$('selAll').onclick = () => { const boxes = [...document.querySelectorAll('.sel')]; const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); };
+$('readyList').addEventListener('click', async e => {
+  const a = e.target.closest('[data-prev]'); if (!a) return;
+  e.preventDefault();
+  openDialog('Loading…', '');
+  try {
+    const { lead } = await api('/api/lead?id=' + a.dataset.prev);
+    $('dTitle').textContent = 'To: ' + lead.email;
+    $('dBody').innerHTML = '<p style="margin:10px 0 0"><b>' + esc(lead.draft_subject || '') + '</b></p><pre>' + esc(lead.draft_body || '') + '</pre>' +
+      '<p class="help">If you edit this draft in the Gmail app, your edited version is what gets sent.</p>';
+  } catch (err) { $('dTitle').textContent = 'Could not load'; $('dBody').innerHTML = '<p>' + esc(err.message) + '</p>'; }
+});
+$('sendSel').onclick = () => busy($('sendSel'), async () => {
+  const ids = selected();
+  if (!ids.length) return msg($('homeMsg'), 'Select at least one email.', 'err');
+  try {
+    const r = await api('/api/approve', { ids });
+    let t = r.queued + ' approved. ';
+    if (r.paused) t += 'Sending is paused, so they will wait until you resume.';
+    else if (r.sentNow) t += r.sentNow + ' sent now; the rest go out about 3 every 10 minutes.';
+    else if (!r.leftToday) t += 'Today\'s limit is reached, so they go out tomorrow.';
+    else t += 'They go out about 3 every 10 minutes.';
+    msg($('homeMsg'), t, 'ok');
+  } catch (e) { msg($('homeMsg'), e.message, 'err'); }
+  loadHome();
+}, 'Sending…');
+$('skipSel').onclick = () => busy($('skipSel'), async () => {
+  const ids = selected();
+  if (!ids.length) return msg($('homeMsg'), 'Select at least one email.', 'err');
+  if (!confirm('Skip ' + ids.length + ' email(s)? Their drafts are deleted and these leads will not be emailed.')) return;
+  let n = 0;
+  try {
+    for (let i = 0; i < ids.length; i += 25) n += (await api('/api/skip', { ids: ids.slice(i, i + 25) })).skipped;
+    msg($('homeMsg'), n + ' skipped.', 'ok');
+  } catch (e) { msg($('homeMsg'), e.message + (n ? ' (' + n + ' skipped before this)' : ''), 'err'); }
+  loadHome();
+}, 'Skipping…');
+$('makeDrafts').onclick = () => busy($('makeDrafts'), async () => {
+  try { const r = await api('/api/drafts', {}); msg($('homeMsg'), r.message || (r.created + ' created'), r.created ? 'ok' : 'warn'); }
+  catch (e) { msg($('homeMsg'), e.message, 'err'); }
+  loadHome();
+}, 'Creating…');
+$('checkNow').onclick = () => busy($('checkNow'), async () => {
+  try {
+    const r = await api('/api/replies', {});
+    msg($('homeMsg'), r.error ? r.error : (r.replied + ' new repl' + (r.replied === 1 ? 'y' : 'ies') + ', ' + r.bounced + ' bounced, ' + r.unsubscribed + ' unsubscribed.'), r.error ? 'warn' : 'ok');
+  } catch (e) { msg($('homeMsg'), e.message, 'err'); }
+  loadHome();
+}, 'Checking…');
+async function setPaused(p) {
+  if (p && !confirm('Pause all sending? Approved emails will wait until you resume.')) return;
+  try { await api('/api/settings', { paused: p ? 'yes' : 'no' }); toast(p ? 'Sending paused' : 'Sending resumed'); } catch (e) { toast(e.message, true); }
+  loadHome();
+}
+$('pauseBtn').onclick = () => setPaused(true);
+
+/* ---------- leads ---------- */
+function fillStatusFilter() {
+  const sel = $('lstatus'); const cur = sel.value;
+  const counts = (SUMMARY && SUMMARY.byStatus) || {};
+  sel.innerHTML = '<option value="">All statuses</option><option value="pending">Drafts and queued</option>' +
+    Object.keys(STATUS).filter(k => counts[k]).map(k => '<option value="' + k + '">' + esc(STATUS[k]) + ' (' + counts[k] + ')</option>').join('');
+  sel.value = cur;
+}
+async function loadLeads() {
+  if (!SUMMARY) { try { SUMMARY = await api('/api/summary'); STATUS = SUMMARY.statuses; setPill(SUMMARY.gmail); } catch (e) {} }
+  fillStatusFilter();
+  const qs = new URLSearchParams({ q: $('lq').value.trim(), status: $('lstatus').value, country: $('lcountry').value, page: leadPage });
+  let d;
+  try { d = await api('/api/leads?' + qs); } catch (e) { $('leadList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  if (d.countries) {
+    const sel = $('lcountry'), cur = sel.value;
+    sel.innerHTML = '<option value="">All countries</option>' + d.countries.map(c => '<option value="' + esc(c.country) + '">' + esc(c.country) + ' (' + c.n + ')</option>').join('');
+    sel.value = cur;
+  }
+  $('leadTotal').textContent = '(' + d.total + ')';
+  $('leadList').innerHTML = d.rows.length ? d.rows.map(r =>
+    '<div class="item click" data-lead="' + r.id + '" tabindex="0" role="button"><div class="t"><b>' + esc(r.company || r.email) + '</b>' +
+    '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + '</small></div><span class="' + tagClass(r.status) + '">' + esc(label(r.status)) + '</span></div>').join('')
+    : '<div class="empty">' + (d.total ? 'No leads on this page.' : 'No leads match. Import a CSV above.') + '</div>';
+  const pages = Math.max(1, Math.ceil(d.total / d.per));
+  $('pgInfo').textContent = 'Page ' + d.page + ' of ' + pages;
+  $('prevPg').disabled = d.page <= 1; $('nextPg').disabled = d.page >= pages;
+}
+$('lq').addEventListener('input', () => { clearTimeout(leadTimer); leadTimer = setTimeout(() => { leadPage = 1; loadLeads(); }, 350); });
+$('lstatus').onchange = $('lcountry').onchange = () => { leadPage = 1; loadLeads(); };
+$('prevPg').onclick = () => { leadPage--; loadLeads(); };
+$('nextPg').onclick = () => { leadPage++; loadLeads(); };
+$('leadList').addEventListener('click', e => { const it = e.target.closest('[data-lead]'); if (it) openLead(it.dataset.lead); });
+$('leadList').addEventListener('keydown', e => { const it = e.target.closest('[data-lead]'); if (it && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openLead(it.dataset.lead); } });
+
+async function openLead(id) {
+  openDialog('Loading…', '');
+  let lead;
+  try { lead = (await api('/api/lead?id=' + id)).lead; } catch (e) { $('dTitle').textContent = 'Could not load'; $('dBody').innerHTML = esc(e.message); return; }
+  $('dTitle').textContent = lead.company || lead.email;
+  const opts = [lead.status].concat(lead.manual.filter(s => s !== lead.status));
+  const canChange = !['drafting', 'sending', 'fu_drafting', 'fu_sending'].includes(lead.status);
+  $('dBody').innerHTML =
+    '<dl class="kv">' +
+    '<dt>Email</dt><dd>' + esc(lead.email) + '</dd>' +
+    (lead.phone ? '<dt>Phone</dt><dd>' + esc(lead.phone) + '</dd>' : '') +
+    (lead.website ? '<dt>Website</dt><dd>' + esc(lead.website) + '</dd>' : '') +
+    (lead.business_type ? '<dt>Type</dt><dd>' + esc(lead.business_type) + '</dd>' : '') +
+    '<dt>Source</dt><dd>' + esc(lead.source || '') + '</dd>' +
+    (lead.sent_at ? '<dt>Emailed</dt><dd>' + when(lead.sent_at) + '</dd>' : '') +
+    (lead.followup_due && lead.status === 'sent' ? '<dt>Follow-up due</dt><dd>' + when(lead.followup_due) + '</dd>' : '') +
+    (lead.followup_sent_at ? '<dt>Followed up</dt><dd>' + when(lead.followup_sent_at) + '</dd>' : '') +
+    (lead.replied_at ? '<dt>Replied</dt><dd>' + when(lead.replied_at) + '</dd>' : '') +
+    (lead.reply_snippet ? '<dt>Reply</dt><dd>"' + esc(lead.reply_snippet) + '"</dd>' : '') +
+    '</dl>' +
+    (lead.gmailLink ? '<p><a class="btn line" target="_blank" rel="noopener" href="' + esc(lead.gmailLink) + '">Open conversation in Gmail</a></p>' : '') +
+    '<div class="grid2"><div><label for="eFirst">First name</label><input type="text" id="eFirst" value="' + esc(lead.first_name) + '"></div>' +
+    '<div><label for="eCompany">Company</label><input type="text" id="eCompany" value="' + esc(lead.company) + '"></div>' +
+    '<div><label for="eCountry">Country</label><input type="text" id="eCountry" value="' + esc(lead.country) + '"></div>' +
+    '<div><label for="eStatus">Status</label><select id="eStatus"' + (canChange ? '' : ' disabled') + '>' + opts.map(s => '<option value="' + s + '">' + esc(label(s)) + '</option>').join('') + '</select></div></div>' +
+    '<label for="eNotes">Notes</label><textarea id="eNotes" style="min-height:90px">' + esc(lead.notes) + '</textarea>' +
+    '<div class="row" style="margin-top:12px"><button id="eSave">Save</button></div><div id="eMsg"></div>';
+  $('eSave').onclick = () => busy($('eSave'), async () => {
+    const body = { id: lead.id, first_name: $('eFirst').value, company: $('eCompany').value, country: $('eCountry').value, notes: $('eNotes').value };
+    if (canChange && $('eStatus').value !== lead.status) body.status = $('eStatus').value;
+    try { await api('/api/lead', body); $('dlg').close(); toast('Saved'); SUMMARY = null; loadLeads(); }
+    catch (e) { msg($('eMsg'), e.message, 'err'); }
+  }, 'Saving…');
+}
+
+$('exportBtn').onclick = () => busy($('exportBtn'), async () => {
+  try {
+    let after = 0, all = [], st = STATUS;
+    for (;;) {
+      const d = await api('/api/export?after=' + after);
+      st = d.statuses || st;
+      all = all.concat(d.rows);
+      if (d.rows.length < 500) break;
+      after = d.rows[d.rows.length - 1].id;
+    }
+    const cols = ['email', 'first_name', 'company', 'country', 'business_type', 'phone', 'website', 'source', 'status', 'notes', 'sent_at', 'followup_sent_at', 'replied_at', 'created_at'];
+    const cell = v => { v = v == null ? '' : String(v); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const date = v => v ? new Date(Number(v)).toISOString().slice(0, 16).replace('T', ' ') : '';
+    const lines = [cols.join(',')].concat(all.map(r => cols.map(c => /_at$/.test(c) ? date(r[c]) : c === 'status' ? (st[r[c]] || r[c]) : r[c]).map(cell).join(',')));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'shree-pharma-leads-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast(all.length + ' leads downloaded');
+  } catch (e) { toast(e.message, true); }
+}, 'Preparing…');
+
+/* ---------- CSV import ---------- */
+function parseCSV(text) {
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/, 1)[0] || '';
+  const count = ch => (first.match(new RegExp(ch === '\t' ? '\t' : '\\' + ch, 'g')) || []).length;
+  const delim = count(';') > count(',') ? ';' : (count('\t') > count(',') ? '\t' : ',');
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"' && cell === '') q = true;
+    else if (ch === delim) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell); cell = '';
+      if (row.some(v => v.trim() !== '')) rows.push(row);
+      row = [];
+    } else cell += ch;
+  }
+  row.push(cell); if (row.some(v => v.trim() !== '')) rows.push(row);
+  return rows;
+}
+const FIELDS = {
+  email: ['email', 'e-mail', 'email address', 'e-mail address', 'mail', 'email id', 'emails', 'contact email', 'work email', 'business email', 'email 1', 'primary email'],
+  firstName: ['first name', 'firstname', 'first', 'given name', 'fname'],
+  name: ['name', 'full name', 'contact name', 'contact person', 'contact', 'person', 'buyer name', 'person name'],
+  company: ['company', 'company name', 'organization', 'organisation', 'business', 'business name', 'firm', 'importer', 'importer name', 'buyer', 'account name', 'consignee', 'consignee name'],
+  country: ['country', 'country name', 'nation', 'location country', 'destination country', 'importer country'],
+  type: ['type', 'business type', 'category', 'industry', 'segment', 'company type'],
+  phone: ['phone', 'phone number', 'mobile', 'telephone', 'tel', 'contact number', 'whatsapp', 'mobile number', 'phone 1'],
+  website: ['website', 'web', 'url', 'domain', 'site', 'company website']
+};
+const norm = h => String(h).toLowerCase().replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim();
+$('csv').onchange = () => {
+  const f = $('csv').files[0]; PARSED = null; $('importBtn').disabled = true; $('mapInfo').textContent = ''; msg($('importMsg'), '');
+  if (!f) return;
+  if (f.size > 25 * 1024 * 1024) return msg($('importMsg'), 'This file is larger than 25 MB. Split it into smaller files.', 'err');
+  const rd = new FileReader();
+  rd.onerror = () => msg($('importMsg'), 'Could not read this file.', 'err');
+  rd.onload = () => {
+    const rows = parseCSV(String(rd.result));
+    if (rows.length < 2) return msg($('importMsg'), 'This file has no data rows.', 'err');
+    const head = rows[0].map(norm), map = {};
+    Object.keys(FIELDS).forEach(k => {
+      let ix = head.findIndex(h => FIELDS[k].includes(h));
+      if (ix < 0 && k === 'email') ix = head.findIndex(h => h.includes('mail'));
+      if (ix >= 0) map[k] = ix;
+    });
+    let dataRows = rows.slice(1);
+    if (map.email === undefined) {
+      const sample = rows.slice(0, 40);
+      for (let c = 0; c < rows[0].length; c++) if (sample.filter(r => /@/.test(r[c] || '')).length > sample.length / 2) { map.email = c; break; }
+      if (map.email !== undefined && /@/.test(rows[0][map.email] || '')) dataRows = rows; // file has no header row
+    }
+    if (map.email === undefined) return msg($('importMsg'), 'Could not find an email column in this file. Add a column named "Email".', 'err');
+    PARSED = dataRows.map(r => { const o = {}; Object.keys(map).forEach(k => o[k] = (r[map[k]] || '').trim()); return o; });
+    const names = { email: 'email', firstName: 'first name', name: 'name', company: 'company', country: 'country', type: 'type', phone: 'phone', website: 'website' };
+    $('mapInfo').textContent = PARSED.length + ' rows found. Columns used: ' + Object.keys(map).map(k => names[k]).join(', ') + '.';
+    if (!$('ctry').value && map.country === undefined) {
+      const m = f.name.match(/(united[ _-]?kingdom|uk|usa|united[ _-]?states|us|uae|dubai|philippines|india|canada|australia|saudi|qatar|oman|kuwait|nigeria|kenya|vietnam|malaysia|singapore)/i);
+      if (m) {
+        const k = m[1].toLowerCase().replace(/[ _-]/g, '');
+        $('ctry').value = ({ uk: 'United Kingdom', unitedkingdom: 'United Kingdom', usa: 'United States', us: 'United States', unitedstates: 'United States', uae: 'United Arab Emirates', dubai: 'United Arab Emirates', saudi: 'Saudi Arabia' })[k] || m[1].replace(/\b\w/g, c => c.toUpperCase());
+      }
+    }
+    $('importBtn').disabled = false;
+  };
+  rd.readAsText(f);
+};
+$('importBtn').onclick = async () => {
+  if (!PARSED) return;
+  const btn = $('importBtn'); btn.disabled = true;
+  const src = $('csv').files[0].name, ctry = $('ctry').value.trim();
+  const bar = $('impBar'); bar.hidden = false; bar.firstElementChild.style.width = '0%';
+  let added = 0, dupes = 0, invalid = 0, i = 0;
+  try {
+    for (i = 0; i < PARSED.length; i += 100) {
+      const last = i + 100 >= PARSED.length;
+      const totals = last ? (added + '+ added') : '';
+      const r = await api('/api/import', { rows: PARSED.slice(i, i + 100), source: src, country: ctry, last, totals });
+      added += r.added; dupes += r.dupes; invalid += r.invalid;
+      bar.firstElementChild.style.width = Math.round(Math.min(i + 100, PARSED.length) / PARSED.length * 100) + '%';
+      btn.textContent = 'Importing… ' + Math.min(i + 100, PARSED.length) + ' / ' + PARSED.length;
+    }
+    msg($('importMsg'), added + ' new lead' + (added === 1 ? '' : 's') + ' added. ' + dupes + ' skipped as duplicates or already in your list. ' + invalid + ' skipped with no valid email.', 'ok');
+    $('csv').value = ''; PARSED = null; $('mapInfo').textContent = '';
+    SUMMARY = null; leadPage = 1; loadLeads();
+  } catch (e) {
+    msg($('importMsg'), 'Import stopped: ' + e.message + '. ' + added + ' were added before it stopped. Choose the file again and import: leads already added are skipped automatically.', 'err');
+  }
+  btn.textContent = 'Import leads'; btn.disabled = !PARSED;
+  setTimeout(() => { bar.hidden = true; }, 1200);
+};
+
+/* ---------- enquiries ---------- */
+async function loadEnquiries() {
+  let d;
+  try { d = await api('/api/enquiries?page=' + enqPage); } catch (e) { $('enqList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  const waNum = p => String(p || '').replace(/[^\d]/g, '');
+  $('enqList').innerHTML = d.rows.length ? d.rows.map(r =>
+    '<div class="item"><div class="t"><b>' + esc(r.company || r.name) + ' <span class="' + (r.status === 'new' ? 'tag' : 'tag grey') + '">' + (r.status === 'new' ? 'New' : r.status === 'replied' ? 'Replied' : 'Closed') + '</span></b>' +
+    '<small>' + esc(r.name) + ' · ' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + (r.quantity ? ' · Qty ' + esc(r.quantity) : '') + '</small>' +
+    '<small>' + when(r.created_at) + (r.phone ? ' · ' + esc(r.phone) : '') + '</small>' +
+    (r.message ? '<small class="wrapline">' + esc(r.message) + '</small>' : '') +
+    '<div class="row" style="margin-top:8px">' +
+    '<a class="btn" style="min-height:36px;padding:6px 12px" href="mailto:' + esc(r.email) + '?subject=' + encodeURIComponent('Your quote request – Shree Pharma') + '">Reply by email</a>' +
+    (waNum(r.phone).length >= 8 ? '<a class="btn line" style="min-height:36px;padding:6px 12px" target="_blank" rel="noopener" href="https://wa.me/' + waNum(r.phone) + '">WhatsApp</a>' : '') +
+    '<select data-enq="' + r.id + '" aria-label="Status" style="width:auto;min-height:36px;padding:6px"><option value="new"' + (r.status === 'new' ? ' selected' : '') + '>New</option><option value="replied"' + (r.status === 'replied' ? ' selected' : '') + '>Replied</option><option value="closed"' + (r.status === 'closed' ? ' selected' : '') + '>Closed</option></select>' +
+    '</div></div></div>').join('')
+    : '<div class="empty">No quote requests yet. They appear here as soon as someone sends the form on your website.</div>';
+  const pages = Math.max(1, Math.ceil(d.total / d.per));
+  $('ePg').textContent = 'Page ' + d.page + ' of ' + pages;
+  $('ePrev').disabled = d.page <= 1; $('eNext').disabled = d.page >= pages;
+}
+$('enqList').addEventListener('change', async e => {
+  const s = e.target.closest('[data-enq]'); if (!s) return;
+  try { await api('/api/enquiry-status', { id: Number(s.dataset.enq), status: s.value }); toast('Updated'); loadEnquiries(); refreshBadge(); } catch (err) { toast(err.message, true); }
+});
+$('ePrev').onclick = () => { enqPage--; loadEnquiries(); };
+$('eNext').onclick = () => { enqPage++; loadEnquiries(); };
+async function refreshBadge() { try { const d = await api('/api/summary'); SUMMARY = d; const b = $('enqBadge'); b.hidden = !d.newEnquiries; b.textContent = d.newEnquiries; } catch (e) {} }
+
+/* ---------- settings ---------- */
+const FIELDS_SET = ['your_name', 'company_name', 'whatsapp', 'alert_email', 'address', 'website', 'brochure_link', 'daily_limit', 'followup_days', 'stop_days', 'auto_drafts', 'paused', 'tpl_first_subject', 'tpl_first_body', 'tpl_fu_body'];
+async function loadSettings() {
+  let d;
+  try { d = await api('/api/settings'); } catch (e) { $('gmailBox').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  SETTINGS = d;
+  FIELDS_SET.forEach(k => { const el = $(k); if (el) el.value = d.values[k] == null ? '' : d.values[k]; });
+  $('autoWeb').textContent = d.values.website ? '' : 'Now using: ' + (d.autoWebsite || '(open this dashboard from your website address)');
+  $('autoBro').textContent = d.values.brochure_link ? '' : 'Now using: ' + (d.autoBrochure || '(your website address + /brochure.pdf)');
+  $('redirUri').textContent = d.redirectUri;
+  $('phList').innerHTML = d.placeholders.map(p => '<span class="ph" data-ph="' + p + '">{{' + p + '}}</span>').join('');
+  const g = d.gmail;
+  setPill(g);
+  let h = '';
+  if (!d.googleKeys) h = '<div class="alert warn">Google keys are missing. Add the secrets GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Cloudflare (setup guide, Part 4), then come back.</div>';
+  else if (g.connected && !g.problem) h = '<p style="margin:0">Connected to <b>' + esc(g.email) + '</b>. Drafts, sending and reply checks use this account.</p>';
+  else if (g.problem) h = '<div class="alert err">' + esc(g.problem) + '</div>';
+  else h = '<p style="margin:0">Not connected. Tap <b>Connect Gmail</b> and sign in with your <b>outreach</b> Gmail account.</p>';
+  $('gmailBox').innerHTML = h;
+  $('connectBtn').textContent = g.connected ? 'Reconnect Gmail' : 'Connect Gmail';
+  $('connectBtn').hidden = !d.googleKeys;
+  $('testBtn').hidden = $('disconnectBtn').hidden = !g.connected;
+  try { const l = await api('/api/log'); $('fullLog').innerHTML = l.log.length ? l.log.map(logRow).join('') : '<div class="empty">Nothing yet.</div>'; } catch (e) {}
+}
+$('phList').addEventListener('click', async e => {
+  const p = e.target.closest('[data-ph]'); if (!p) return;
+  try { await navigator.clipboard.writeText('{{' + p.dataset.ph + '}}'); toast('Copied {{' + p.dataset.ph + '}}'); } catch (err) { toast('Type {{' + p.dataset.ph + '}} into the template'); }
+});
+document.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => {
+  if (!SETTINGS) return;
+  if (!confirm('Replace this text with the original? Your changes to this template will be lost after you save.')) return;
+  $(b.dataset.reset).value = SETTINGS.defaults[b.dataset.reset];
+});
+document.querySelectorAll('[data-preview]').forEach(b => b.onclick = () => {
+  const isFu = b.dataset.preview === 'fu';
+  const v = k => ($(k) ? $(k).value : '');
+  const map = { FirstName: 'Ahmed', Company: 'Gulf Pharma Trading LLC', Country: 'United Arab Emirates', YourName: v('your_name'), CompanyName: v('company_name'), WhatsApp: v('whatsapp'),
+    Website: v('website') || (SETTINGS && SETTINGS.autoWebsite) || '', BrochureLink: v('brochure_link') || (SETTINGS && SETTINGS.autoBrochure) || '', Address: v('address'), UnsubscribeLink: ((SETTINGS && SETTINGS.origin) || '') + '/u/…' };
+  const render = t => String(t).split('\n').filter(line => { const m = line.trim().match(/^\{\{\s*(\w+)\s*\}\}$/); return !(m && m[1] in map && !String(map[m[1]]).trim()); })
+    .map(line => line.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (k in map ? map[k] : m))).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  const subject = isFu ? 'Re: ' + render(v('tpl_first_subject')) : render(v('tpl_first_subject'));
+  openDialog('Preview (sample lead)', '<p style="margin:10px 0 0"><b>' + esc(subject) + '</b></p><pre>' + esc(render(v(isFu ? 'tpl_fu_body' : 'tpl_first_body'))) + '</pre>');
+});
+$('setForm').addEventListener('submit', e => {
+  e.preventDefault();
+  busy($('saveBtn'), async () => {
+    const body = {};
+    FIELDS_SET.forEach(k => { const el = $(k); if (el) body[k] = el.value; });
+    try { await api('/api/settings', body); msg($('setMsg'), 'Settings saved.', 'ok'); toast('Settings saved'); SUMMARY = null; loadSettings(); }
+    catch (err) { msg($('setMsg'), err.message, 'err'); }
+  }, 'Saving…');
+});
+$('testBtn').onclick = () => busy($('testBtn'), async () => {
+  try { const r = await api('/api/test-email', {}); msg($('gmailMsg'), 'Test email sent to ' + r.to + '. Check that inbox.', 'ok'); }
+  catch (e) { msg($('gmailMsg'), e.message, 'err'); }
+}, 'Sending…');
+$('disconnectBtn').onclick = () => busy($('disconnectBtn'), async () => {
+  if (!confirm('Disconnect Gmail? Nothing will be sent or checked until you connect again.')) return;
+  try { await api('/api/gmail/disconnect', {}); toast('Gmail disconnected'); loadSettings(); } catch (e) { msg($('gmailMsg'), e.message, 'err'); }
+});
+
+/* ---------- phone notifications ---------- */
+let PUSH = null;
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+function deviceLabel() {
+  const u = navigator.userAgent;
+  const dev = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'iPad' : /Android/.test(u) ? 'Android' : /Windows/.test(u) ? 'Windows PC' : /Macintosh/.test(u) ? 'Mac' : 'Device';
+  const br = /Edg\//.test(u) ? 'Edge' : /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Firefox\//.test(u) ? 'Firefox' : /CriOS|Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : '';
+  return dev + (isStandalone() ? ' · home-screen app' : br ? ' · ' + br : '');
+}
+function keyBytes(b64) {
+  const s = b64.replace(/-/g, '+').replace(/_/g, '/'); const bin = atob(s + '==='.slice((s.length + 3) % 4));
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+async function currentSub() {
+  if (!pushSupported()) return null;
+  try { const reg = await navigator.serviceWorker.getRegistration('/app'); return reg ? await reg.pushManager.getSubscription() : null; } catch (e) { return null; }
+}
+async function loadPush() {
+  try { PUSH = await api('/api/push'); } catch (e) { $('pushBox').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  const sub = await currentSub();
+  const here = !!(sub && PUSH.devices.some(d => d.endpoint === sub.endpoint));
+  let h = '';
+  if (!pushSupported()) {
+    h = isIOS() && !isStandalone()
+      ? '<div class="alert warn">On iPhone, notifications work only from the home-screen app. In Safari tap <b>Share</b> → <b>Add to Home Screen</b>, open <b>Shree Pharma</b> from your home screen, then come back here.</div>'
+      : '<div class="alert warn">This browser cannot show notifications. Use Safari (iPhone, from the home-screen app), or Chrome / Edge on Android and computers.</div>';
+  } else if (Notification.permission === 'denied') {
+    h = '<div class="alert warn">Notifications are blocked for this site. Allow them in your phone or browser settings for this site, then reload this page.</div>';
+  } else if (here) {
+    h = '<p style="margin:0">Notifications are <b>on</b> for this device.</p>';
+  } else {
+    h = '<p style="margin:0">Notifications are off for this device.</p>';
+  }
+  $('pushBox').innerHTML = h;
+  $('pushOnBtn').hidden = !pushSupported() || Notification.permission === 'denied' || here;
+  $('pushOffBtn').hidden = !here;
+  $('pushTestBtn').hidden = !PUSH.devices.length;
+  $('pushList').innerHTML = PUSH.devices.length
+    ? '<div class="help">Devices with notifications on (' + PUSH.devices.length + ' of ' + PUSH.max + '):</div>' + PUSH.devices.map(d => '<div class="item" style="justify-content:space-between"><span>' + esc(d.label) + (sub && d.endpoint === sub.endpoint ? ' <span class="tag g">this device</span>' : '') + '</span><span class="muted">since ' + esc(when(d.created_at)) + '</span></div>').join('')
+    : '';
+}
+$('pushOnBtn').onclick = () => busy($('pushOnBtn'), async () => {
+  msg($('pushMsg'), '');
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { msg($('pushMsg'), 'Notifications were not allowed. Tap the button again and choose Allow.', 'err'); loadPush(); return; }
+    if (!PUSH) PUSH = await api('/api/push');
+    await navigator.serviceWorker.register('/app/sw.js', { scope: '/app' });
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    const want = keyBytes(PUSH.publicKey);
+    if (sub && sub.options && sub.options.applicationServerKey) {
+      const have = new Uint8Array(sub.options.applicationServerKey);
+      if (have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; }
+    }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
+    await api('/api/push/subscribe', { subscription: sub.toJSON(), label: deviceLabel() });
+    msg($('pushMsg'), 'Notifications are on for this device. Tap "Send a test notification" to check.', 'ok');
+  } catch (e) { msg($('pushMsg'), e.message || 'Could not turn on notifications.', 'err'); }
+  loadPush();
+}, 'Turning on…');
+$('pushOffBtn').onclick = () => busy($('pushOffBtn'), async () => {
+  try {
+    const sub = await currentSub();
+    if (sub) { await api('/api/push/unsubscribe', { endpoint: sub.endpoint, label: deviceLabel() }); await sub.unsubscribe().catch(() => {}); }
+    msg($('pushMsg'), 'Notifications are off for this device.', 'ok');
+  } catch (e) { msg($('pushMsg'), e.message, 'err'); }
+  loadPush();
+}, 'Turning off…');
+$('pushTestBtn').onclick = () => busy($('pushTestBtn'), async () => {
+  try { const r = await api('/api/push/test', {}); msg($('pushMsg'), 'Test sent to ' + r.sent + ' of ' + r.devices + ' device(s). It should pop up within a few seconds.', 'ok'); }
+  catch (e) { msg($('pushMsg'), e.message, 'err'); }
+}, 'Sending…');
+if (pushSupported() && Notification.permission === 'granted') navigator.serviceWorker.register('/app/sw.js', { scope: '/app' }).catch(() => {});
+
+/* ---------- start ---------- */
+showTab();
+setInterval(() => { if (!document.hidden && (location.hash || '#home') === '#home' && !$('dlg').open) loadHome(); }, 60000);
+})();
+</script>
+</body>
+</html>
