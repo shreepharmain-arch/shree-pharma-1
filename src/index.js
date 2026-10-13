@@ -7,6 +7,7 @@ import {
   STATUS, PENDING, HAS_DRAFT, MANUAL_STATUSES, effective, dailyLimit, createDrafts, sendQueued, checkReplies, syncDrafts,
   closeLead, sendAlert, compose, runCron, sentTodayKey
 } from './engine.js';
+import { pushAll, vapidKeys, validSubscription, SERVICE_WORKER, MAX_DEVICES } from './push.js';
 import {
   json, html, redirect, getCookie, hmacHex, sha256Hex, safeEqual, randomHex, cleanEmail, firstName, clip, esc, istDay, isYes, DAY
 } from './util.js';
@@ -46,6 +47,9 @@ async function route(request, env, ctx) {
   }
   if (p.startsWith('/u/')) { await ensureSchema(env); return unsubscribe(request, env, p.slice(3)); }
   if (p === '/app/manifest.webmanifest') return manifest();
+  if (p === '/app/sw.js') {
+    return new Response(SERVICE_WORKER, { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache', 'service-worker-allowed': '/app' } });
+  }
   if (p === '/app' || p.startsWith('/app/')) { await ensureSchema(env); return appRoutes(request, env, url, p, m); }
   if (p.startsWith('/api/')) { await ensureSchema(env); return api(request, env, url, p, m); }
 
@@ -204,6 +208,19 @@ async function api(request, env, url, p, m) {
       case 'GET /api/enquiries': return json(await listEnquiries(env, url));
       case 'POST /api/enquiry-status': return json(await enquiryStatus(env, body));
       case 'GET /api/export': return json(await exportLeads(env, url));
+      case 'GET /api/push': return json(await pushStatus(env, s));
+      case 'POST /api/push/subscribe': return json(await pushSubscribe(env, body));
+      case 'POST /api/push/unsubscribe': {
+        await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?').bind(String(body.endpoint || '')).run();
+        await log(env, 'Notifications turned off', '', clip(body.label, 60));
+        return json({ ok: true });
+      }
+      case 'POST /api/push/test': {
+        const r = await pushAll(env, { title: 'Shree Pharma notifications work', body: 'You will get a pop-up like this for buyer replies, website requests and drafts ready to approve.', url: '/app#settings', tag: 'test' }, s);
+        if (!r.devices) throw bad('No device has notifications turned on yet.');
+        if (!r.sent) throw bad('The notification could not be delivered. Turn notifications off and on again on this device.');
+        return json(r);
+      }
       case 'GET /api/log': {
         const { results } = await env.DB.prepare('SELECT at, action, email, detail FROM log ORDER BY id DESC LIMIT 60').all();
         return json({ log: results });
@@ -483,6 +500,27 @@ async function exportLeads(env, url) {
   return { rows: results, statuses: STATUS };
 }
 
+/* ---------------- phone notifications ---------------- */
+
+async function pushStatus(env, s) {
+  const keys = await vapidKeys(env, s);
+  const { results } = await env.DB.prepare('SELECT endpoint, label, created_at, last_ok FROM push_subs ORDER BY created_at DESC').all();
+  return { publicKey: keys.publicKey, devices: results, max: MAX_DEVICES };
+}
+
+async function pushSubscribe(env, b) {
+  const sub = validSubscription(b.subscription, !!env.GMAIL_API_BASE); // plain http only for the local test setup
+  if (!sub) throw bad('This browser gave an unusable notification address. Try again, or use Safari on iPhone / Chrome on Android.');
+  const label = clip(b.label, 60) || 'Device';
+  await env.DB.prepare(`INSERT INTO push_subs(endpoint, p256dh, auth, label, created_at) VALUES(?, ?, ?, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth, label = excluded.label, created_at = excluded.created_at`)
+    .bind(sub.endpoint, sub.p256dh, sub.auth, label, Date.now()).run();
+  // keep only the newest few devices
+  await env.DB.prepare('DELETE FROM push_subs WHERE endpoint NOT IN (SELECT endpoint FROM push_subs ORDER BY created_at DESC LIMIT ?)').bind(MAX_DEVICES).run();
+  await log(env, 'Notifications turned on', '', label);
+  return { ok: true };
+}
+
 /* ---------------- public: website quote form ---------------- */
 
 async function publicEnquiry(request, env, ctx) {
@@ -517,6 +555,7 @@ async function publicEnquiry(request, env, ctx) {
     await env.DB.prepare(`UPDATE leads SET notes = CASE WHEN notes = '' THEN 'Website enquiry' ELSE notes || ' · Website enquiry' END, updated_at = ? WHERE id = ?`).bind(now, lead.id).run();
   }
   await log(env, 'Website enquiry', e.email, e.company);
+  ctx.waitUntil(pushAll(env, { title: 'New quote request: ' + (e.company || e.name), body: [e.country, e.quantity ? 'Qty ' + e.quantity : '', e.email].filter(Boolean).join(' · '), url: '/app#enquiries', tag: 'enquiry' }, s));
   if (connected && s.alert_email) {
     ctx.waitUntil(sendAlert(gm, s, 'New quote request: ' + (e.company || e.name) + (e.country ? ' (' + e.country + ')' : ''),
       ['Name: ' + e.name, 'Company: ' + e.company, 'Email: ' + e.email, 'Phone: ' + e.phone, 'Country: ' + e.country, 'Quantity: ' + e.quantity, '', 'Message:', e.message || '(none)', '',

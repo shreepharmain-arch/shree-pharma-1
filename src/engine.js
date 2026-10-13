@@ -2,6 +2,7 @@
 import { getSettings, setSettings, log, counter, bump, housekeeping, ensureSchema } from './db.js';
 import { Gmail, GmailAuthError, BudgetError, buildMime, textToHtml, headerOf } from './gmail.js';
 import { addBusinessDays, istDay, istMinutes, istWeekday, isYes, stripQuote, htmlToText, b64urlDecode, headerEmail, cleanEmail } from './util.js';
+import { pushAll } from './push.js';
 
 export const STATUS = {
   new: 'New', drafting: 'Preparing draft', drafted: 'Draft ready', queued: 'Queued to send', sending: 'Sending',
@@ -350,6 +351,14 @@ export async function checkReplies(env, gm, s, cap = 12) {
     else if (r.kind === 'no') out.notInterested++;
   }
   if (done === unseen.length && !list.nextPageToken) await setSettings(env, { replies_cursor: String(nowSec - 120) });
+  if (out.fresh.length) {
+    const first = out.fresh[0].lead;
+    await pushAll(env, {
+      title: out.fresh.length > 1 ? out.fresh.length + ' new replies from buyers' : 'Reply from ' + (first.company || first.email),
+      body: out.fresh.length > 1 ? out.fresh.map(f => f.lead.company || f.lead.email).slice(0, 4).join(', ') : '"' + out.fresh[0].snippet.slice(0, 140) + '"',
+      url: '/app#home', tag: 'reply'
+    }, s);
+  }
   if (out.fresh.length && s.alert_email) {
     const lines = out.fresh.map(f => '• ' + (f.lead.company || f.lead.email) + (f.lead.country ? ' (' + f.lead.country + ')' : '') +
       '\n  ' + f.lead.email + '\n  "' + f.snippet.slice(0, 220) + '"\n  Open: https://mail.google.com/mail/?authuser=' + encodeURIComponent(s.gmail_email) + '#all/' + f.threadId);
@@ -416,7 +425,7 @@ export async function runCron(env) {
   await recoverStale(env);
   await stopWatching(env, s);
   if (!s.gmail_refresh || !s.gmail_email) return { skipped: 'not connected' };
-  const gm = new Gmail(env, s, 45);
+  const gm = new Gmail(env, s, 38); // leaves room for phone notifications within the 50-request limit
   const report = {};
   try {
     report.replies = await checkReplies(env, gm, s, 12);
@@ -435,6 +444,7 @@ export async function runCron(env) {
         FROM leads`).first();
       const ready = Number((r && r.ready) || 0);
       if (ready > 0) {
+        await pushAll(env, { title: ready + ' email' + (ready > 1 ? 's' : '') + ' ready to approve', body: 'Open the dashboard to approve and send.', url: '/app#home', tag: 'summary' }, s);
         await sendAlert(gm, s, 'Ready to approve: ' + ready + ' email' + (ready > 1 ? 's' : ''),
           ready + ' email draft(s) are waiting for your approval.\n' + Number((r && r.fresh) || 0) + ' lead(s) have not been emailed yet.\n\n' +
           'Open your dashboard: ' + (s.origin ? s.origin + '/app' : '(your dashboard link)') +
