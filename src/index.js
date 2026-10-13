@@ -555,7 +555,7 @@ async function publicEnquiry(request, env, ctx) {
     await env.DB.prepare(`UPDATE leads SET notes = CASE WHEN notes = '' THEN 'Website enquiry' ELSE notes || ' · Website enquiry' END, updated_at = ? WHERE id = ?`).bind(now, lead.id).run();
   }
   await log(env, 'Website enquiry', e.email, e.company);
-  ctx.waitUntil(pushAll(env, { title: 'New quote request: ' + (e.company || e.name), body: [e.country, e.quantity ? 'Qty ' + e.quantity : '', e.email].filter(Boolean).join(' · '), url: '/app#enquiries', tag: 'enquiry' }, s));
+  ctx.waitUntil(pushAll(env, { title: 'New quote request: ' + (e.company || e.name), body: [e.country, e.quantity ? (/vial/i.test(e.quantity) ? e.quantity : 'Qty ' + e.quantity) : '', e.email].filter(Boolean).join(' · '), url: '/app#enquiries', tag: 'enquiry' }, s));
   if (connected && s.alert_email) {
     ctx.waitUntil(sendAlert(gm, s, 'New quote request: ' + (e.company || e.name) + (e.country ? ' (' + e.country + ')' : ''),
       ['Name: ' + e.name, 'Company: ' + e.company, 'Email: ' + e.email, 'Phone: ' + e.phone, 'Country: ' + e.country, 'Quantity: ' + e.quantity, '', 'Message:', e.message || '(none)', '',
