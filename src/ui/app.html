@@ -206,6 +206,19 @@ dialog::backdrop{background:rgba(20,20,30,.45)}
     </details>
   </div>
 
+  <div class="card">
+    <h2>Phone notifications</h2>
+    <p class="help" style="margin-top:0">Get a pop-up on this phone or computer when a buyer replies, a website quote request arrives, or drafts are ready to approve.</p>
+    <div id="pushBox" class="muted">Loading…</div>
+    <div class="row" style="margin-top:12px">
+      <button type="button" id="pushOnBtn" hidden>Turn on for this device</button>
+      <button type="button" class="line" id="pushTestBtn" hidden>Send a test notification</button>
+      <button type="button" class="danger" id="pushOffBtn" hidden>Turn off for this device</button>
+    </div>
+    <div id="pushMsg"></div>
+    <div class="list" id="pushList" style="margin-top:10px"></div>
+  </div>
+
   <form id="setForm" novalidate>
     <div class="card">
       <h2>Your business</h2>
@@ -321,7 +334,7 @@ function showTab() {
   if (t === 'home') loadHome();
   if (t === 'leads') loadLeads();
   if (t === 'enquiries') loadEnquiries();
-  if (t === 'settings') loadSettings();
+  if (t === 'settings') { loadSettings(); loadPush(); }
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', showTab);
@@ -708,6 +721,83 @@ $('disconnectBtn').onclick = () => busy($('disconnectBtn'), async () => {
   if (!confirm('Disconnect Gmail? Nothing will be sent or checked until you connect again.')) return;
   try { await api('/api/gmail/disconnect', {}); toast('Gmail disconnected'); loadSettings(); } catch (e) { msg($('gmailMsg'), e.message, 'err'); }
 });
+
+/* ---------- phone notifications ---------- */
+let PUSH = null;
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+function deviceLabel() {
+  const u = navigator.userAgent;
+  const dev = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'iPad' : /Android/.test(u) ? 'Android' : /Windows/.test(u) ? 'Windows PC' : /Macintosh/.test(u) ? 'Mac' : 'Device';
+  const br = /Edg\//.test(u) ? 'Edge' : /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Firefox\//.test(u) ? 'Firefox' : /CriOS|Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : '';
+  return dev + (isStandalone() ? ' · home-screen app' : br ? ' · ' + br : '');
+}
+function keyBytes(b64) {
+  const s = b64.replace(/-/g, '+').replace(/_/g, '/'); const bin = atob(s + '==='.slice((s.length + 3) % 4));
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+async function currentSub() {
+  if (!pushSupported()) return null;
+  try { const reg = await navigator.serviceWorker.getRegistration('/app'); return reg ? await reg.pushManager.getSubscription() : null; } catch (e) { return null; }
+}
+async function loadPush() {
+  try { PUSH = await api('/api/push'); } catch (e) { $('pushBox').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  const sub = await currentSub();
+  const here = !!(sub && PUSH.devices.some(d => d.endpoint === sub.endpoint));
+  let h = '';
+  if (!pushSupported()) {
+    h = isIOS() && !isStandalone()
+      ? '<div class="alert warn">On iPhone, notifications work only from the home-screen app. In Safari tap <b>Share</b> → <b>Add to Home Screen</b>, open <b>Shree Pharma</b> from your home screen, then come back here.</div>'
+      : '<div class="alert warn">This browser cannot show notifications. Use Safari (iPhone, from the home-screen app), or Chrome / Edge on Android and computers.</div>';
+  } else if (Notification.permission === 'denied') {
+    h = '<div class="alert warn">Notifications are blocked for this site. Allow them in your phone or browser settings for this site, then reload this page.</div>';
+  } else if (here) {
+    h = '<p style="margin:0">Notifications are <b>on</b> for this device.</p>';
+  } else {
+    h = '<p style="margin:0">Notifications are off for this device.</p>';
+  }
+  $('pushBox').innerHTML = h;
+  $('pushOnBtn').hidden = !pushSupported() || Notification.permission === 'denied' || here;
+  $('pushOffBtn').hidden = !here;
+  $('pushTestBtn').hidden = !PUSH.devices.length;
+  $('pushList').innerHTML = PUSH.devices.length
+    ? '<div class="help">Devices with notifications on (' + PUSH.devices.length + ' of ' + PUSH.max + '):</div>' + PUSH.devices.map(d => '<div class="item" style="justify-content:space-between"><span>' + esc(d.label) + (sub && d.endpoint === sub.endpoint ? ' <span class="tag g">this device</span>' : '') + '</span><span class="muted">since ' + esc(when(d.created_at)) + '</span></div>').join('')
+    : '';
+}
+$('pushOnBtn').onclick = () => busy($('pushOnBtn'), async () => {
+  msg($('pushMsg'), '');
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { msg($('pushMsg'), 'Notifications were not allowed. Tap the button again and choose Allow.', 'err'); loadPush(); return; }
+    if (!PUSH) PUSH = await api('/api/push');
+    await navigator.serviceWorker.register('/app/sw.js', { scope: '/app' });
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    const want = keyBytes(PUSH.publicKey);
+    if (sub && sub.options && sub.options.applicationServerKey) {
+      const have = new Uint8Array(sub.options.applicationServerKey);
+      if (have.length !== want.length || have.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; }
+    }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
+    await api('/api/push/subscribe', { subscription: sub.toJSON(), label: deviceLabel() });
+    msg($('pushMsg'), 'Notifications are on for this device. Tap "Send a test notification" to check.', 'ok');
+  } catch (e) { msg($('pushMsg'), e.message || 'Could not turn on notifications.', 'err'); }
+  loadPush();
+}, 'Turning on…');
+$('pushOffBtn').onclick = () => busy($('pushOffBtn'), async () => {
+  try {
+    const sub = await currentSub();
+    if (sub) { await api('/api/push/unsubscribe', { endpoint: sub.endpoint, label: deviceLabel() }); await sub.unsubscribe().catch(() => {}); }
+    msg($('pushMsg'), 'Notifications are off for this device.', 'ok');
+  } catch (e) { msg($('pushMsg'), e.message, 'err'); }
+  loadPush();
+}, 'Turning off…');
+$('pushTestBtn').onclick = () => busy($('pushTestBtn'), async () => {
+  try { const r = await api('/api/push/test', {}); msg($('pushMsg'), 'Test sent to ' + r.sent + ' of ' + r.devices + ' device(s). It should pop up within a few seconds.', 'ok'); }
+  catch (e) { msg($('pushMsg'), e.message, 'err'); }
+}, 'Sending…');
+if (pushSupported() && Notification.permission === 'granted') navigator.serviceWorker.register('/app/sw.js', { scope: '/app' }).catch(() => {});
 
 /* ---------- start ---------- */
 showTab();
