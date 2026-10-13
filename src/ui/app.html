@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#c8165e">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Shree Pharma">
@@ -13,101 +13,174 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/app/manifest.webmanifest">
 <style>
-:root{--ink:#1b1d2b;--magenta:#c8165e;--deep:#9c0f48;--blush:#fbe9f0;--rule:#e3e1e6;--mute:#5c5f6e;--bg:#f7f6f8;--ok:#11603a;--okbg:#e8f5ee;--err:#a3122f;--errbg:#fdecef;--warn:#8a4b00;--warnbg:#fff3e0}
+:root{
+  --ink:#13213a;--ink2:#2c3a52;--mute:#5a6576;--rule:#dde2e9;--bg:#f3f5f8;--card:#fff;
+  --magenta:#c8165e;--deep:#9c0f48;--blush:#fbeaf1;
+  --ok:#0f5a33;--okbg:#e7f4ec;--err:#a3122f;--errbg:#fdecef;--warn:#7a4300;--warnbg:#fff4e2;
+  --navh:0px;--r:12px
+}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:110px;scroll-padding-bottom:calc(var(--navh) + 16px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
 a{color:var(--deep)}
-.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+:focus-visible{outline:3px solid var(--magenta);outline-offset:2px;border-radius:6px}
+.wrap{max-width:920px;margin:0 auto;padding:0 16px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* header + navigation */
 header{background:#fff;border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top)}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
 .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;white-space:nowrap}
 .logo i{width:8px;height:18px;background:var(--magenta);border-radius:2px 2px 5px 5px;display:block}
-.pill{font-size:12px;font-weight:600;border-radius:20px;padding:3px 10px;background:var(--okbg);color:var(--ok);max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:20px;padding:4px 10px;background:var(--okbg);color:var(--ok);max-width:56vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
 .pill.off{background:var(--errbg);color:var(--err)}
-nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-nav.tabs a{flex:1;text-align:center;padding:10px 8px;text-decoration:none;color:var(--mute);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;min-width:72px}
+nav.tabs{display:flex;gap:4px}
+nav.tabs a{position:relative;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 8px 11px;text-decoration:none;color:var(--mute);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;min-height:44px}
+nav.tabs a svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 nav.tabs a.on{color:var(--ink);border-bottom-color:var(--magenta)}
-nav.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--magenta);color:#fff;font-size:11px;line-height:18px}
-main{padding-bottom:70px}
-h2{font-size:17px;margin:0 0 10px}
-h3{font-size:15px;margin:16px 0 8px}
-.card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px;margin-top:14px;min-width:0}
+nav.tabs a:hover{color:var(--ink)}
+nav.tabs .badge{min-width:18px;padding:0 5px;border-radius:9px;background:var(--magenta);color:#fff;font-size:11px;line-height:18px;text-align:center}
+main.wrap{padding-bottom:calc(40px + var(--navh))}
+
+/* type + blocks */
+h2{font-size:17px;margin:0 0 8px;line-height:1.3}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:16px;margin-top:14px;min-width:0}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.card-head h2{margin:0}
 .muted{color:var(--mute);font-size:14px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-.stat{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:12px;min-width:0}
-.stat b{display:block;font-size:24px;line-height:1.15}
+.count{color:var(--mute);font-weight:500}
+
+/* next step */
+.next{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--rule);border-left:4px solid var(--magenta);border-radius:var(--r);padding:16px;margin-top:14px}
+.next .ic{width:40px;height:40px;border-radius:50%;background:var(--blush);color:var(--deep);display:flex;align-items:center;justify-content:center;flex:none}
+.next .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.next h2{font-size:18px;margin:0 0 2px}
+.next p{margin:0 0 12px;color:var(--mute)}
+.next.calm{border-left-color:var(--ok)}
+.next.calm .ic{background:var(--okbg);color:var(--ok)}
+.next.calm p{margin-bottom:0}
+
+/* stats: one strip, not four boxes */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid var(--rule);border-radius:var(--r);margin-top:14px;overflow:hidden}
+.stat{padding:12px 14px;min-width:0;border-left:1px solid var(--rule)}
+.stat:first-child{border-left:0}
+.stat b{display:block;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums}
 .stat span{font-size:12.5px;color:var(--mute)}
-.stat.hi b{color:var(--magenta)}
-button,.btn{font-family:inherit;font-weight:600;font-size:14px;border-radius:8px;border:1.5px solid var(--magenta);background:var(--magenta);color:#fff;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px}
+
+/* buttons */
+button,.btn{font-family:inherit;font-weight:600;font-size:14.5px;border-radius:9px;border:1.5px solid var(--magenta);background:var(--magenta);color:#fff;padding:10px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;touch-action:manipulation;transition:background-color .15s,border-color .15s}
 button:hover,.btn:hover{background:var(--deep);border-color:var(--deep)}
-button.line,.btn.line{background:#fff;color:var(--ink);border-color:#b9b6c2}
-button.line:hover,.btn.line:hover{border-color:var(--ink)}
-button.ghost{background:none;border:none;color:var(--deep);padding:6px 8px;min-height:0}
-button.danger{background:#fff;color:var(--err);border-color:#e7a5b1}
-button:disabled{opacity:.55;cursor:default}
+button.line,.btn.line{background:#fff;color:var(--ink);border-color:#b6bfcb}
+button.line:hover,.btn.line:hover{border-color:var(--ink);background:#fff}
+button.ghost,.btn.ghost{background:none;border-color:transparent;color:var(--ink2);padding:8px 10px}
+button.ghost:hover,.btn.ghost:hover{background:var(--bg);border-color:transparent}
+button.danger{background:#fff;color:var(--err);border-color:#e3a9b4}
+button.danger:hover{background:var(--errbg);border-color:var(--err)}
+button:disabled{opacity:.5;cursor:default}
+button svg,.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.list{border-top:1px solid var(--rule);margin-top:10px}
-.item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--rule);min-width:0}
-.item input[type=checkbox]{margin-top:3px;width:20px;height:20px;accent-color:var(--magenta);flex:none}
+.tools{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:10px}
+
+/* lists */
+.list{margin-top:8px}
+.item{display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--rule);min-width:0}
+.list > .item:first-child{border-top:0}
+.item input[type=checkbox]{width:22px;height:22px;accent-color:var(--magenta);flex:none;margin:0}
 .item .t{flex:1;min-width:0}
 .item .t b,.item .t .one{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item .t small{color:var(--mute);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .t small{color:var(--mute);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
 .item .t .wrapline{white-space:normal;overflow-wrap:anywhere}
-.item.click{cursor:pointer}
-.item.click:hover{background:#fcfbfc}
-.tag{font-size:11px;font-weight:700;background:var(--blush);color:var(--deep);border-radius:20px;padding:1px 8px;white-space:nowrap}
+.item.click,a.item{cursor:pointer;text-decoration:none;color:inherit;border-radius:8px;margin:0 -8px;padding-left:8px;padding-right:8px}
+.item.click:hover,a.item:hover{background:#f7f8fa}
+.item .chev{width:18px;height:18px;fill:none;stroke:var(--mute);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.item .t b a{color:var(--ink);text-decoration:none}
+.item .t b a:hover{text-decoration:underline}
+.selbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0 4px;border-bottom:1px solid var(--rule)}
+.actbar{display:flex;gap:8px;margin-top:12px;position:sticky;bottom:calc(var(--navh) + 8px);background:#fff;padding:8px 0 2px;z-index:5}
+.actbar #sendSel{flex:1}
+.tag{font-size:11.5px;font-weight:700;background:var(--blush);color:var(--deep);border-radius:20px;padding:2px 8px;white-space:nowrap}
 .tag.g{background:var(--okbg);color:var(--ok)}
-.tag.grey{background:#efeef2;color:var(--mute)}
-.empty{color:var(--mute);padding:14px 0}
-.alert{border-radius:10px;padding:10px 14px;margin-top:12px;font-weight:600;font-size:14px}
+.tag.grey{background:#edf0f4;color:var(--mute)}
+.empty{color:var(--mute);padding:16px 0 6px;text-align:center}
+.empty .btn{margin-top:10px}
+
+/* alerts, forms */
+.alert{border-radius:10px;padding:11px 14px;margin-top:12px;font-weight:600;font-size:14px}
 .alert.ok{background:var(--okbg);color:var(--ok)}
 .alert.err{background:var(--errbg);color:var(--err)}
 .alert.warn{background:var(--warnbg);color:var(--warn);font-weight:500}
 .alert .row{margin-top:8px}
-label{font-weight:600;font-size:13px;display:block;margin:12px 0 5px}
-input[type=text],input[type=email],input[type=number],input[type=search],input[type=url],input[type=file],select,textarea{width:100%;padding:10px;border:1px solid #b9b6c2;border-radius:8px;font:inherit;font-size:16px;background:#fff;color:var(--ink);min-width:0}
-textarea{min-height:240px;resize:vertical;font-size:14px;line-height:1.5}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--magenta);box-shadow:0 0 0 3px rgba(200,22,94,.15)}
-.help{font-size:12.5px;color:var(--mute);margin-top:4px}
+label{font-weight:600;font-size:13.5px;display:block;margin:14px 0 6px}
+input[type=text],input[type=email],input[type=number],input[type=search],input[type=url],input[type=file],select,textarea{width:100%;padding:10px 12px;border:1px solid #b6bfcb;border-radius:9px;font:inherit;font-size:16px;background:#fff;color:var(--ink);min-width:0;min-height:44px}
+textarea{min-height:240px;resize:vertical;font-size:14.5px;line-height:1.55}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(19,33,58,.14)}
+.help{font-size:13px;color:var(--mute);margin-top:5px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
-.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-top:6px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-top:10px}
 .pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:8px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:14px;margin:8px 0}
 .kv dt{color:var(--mute)}
 .kv dd{margin:0;overflow-wrap:anywhere}
-dialog{border:none;border-radius:14px;padding:0;width:min(640px,94vw);max-height:88vh}
-dialog::backdrop{background:rgba(20,20,30,.45)}
-.dlg{padding:16px}
-.dlg pre{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.55;background:var(--bg);border-radius:8px;padding:12px;max-height:55vh;overflow:auto;margin:8px 0 0}
 .counts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mute)}
-.progress{height:8px;background:#efeef2;border-radius:6px;overflow:hidden;margin-top:10px}
+.progress{height:8px;background:#e9edf2;border-radius:6px;overflow:hidden;margin-top:12px}
 .progress i{display:block;height:100%;background:var(--magenta);width:0;transition:width .2s}
-.savebar{position:sticky;bottom:0;background:linear-gradient(rgba(247,246,248,0),var(--bg) 30%);padding:18px 0 calc(10px + env(safe-area-inset-bottom));margin-top:6px}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--bg);padding:6px 8px;border-radius:6px;display:block;overflow-wrap:anywhere;margin-top:4px}
-.ph{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--bg);border-radius:5px;padding:1px 6px;margin:2px 4px 2px 0;cursor:pointer;border:1px solid var(--rule)}
-.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.ph{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--bg);border-radius:5px;padding:2px 6px;margin:2px 4px 2px 0;cursor:pointer;border:1px solid var(--rule)}
+
+/* collapsible sections */
+details.sect{background:#fff;border:1px solid var(--rule);border-radius:var(--r);margin-top:12px;min-width:0}
+details.sect > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:15px 16px;min-height:56px}
+details.sect > summary::-webkit-details-marker{display:none}
+details.sect > summary h2{margin:0;font-size:16px;flex:none}
+details.sect > summary .sum{flex:1;min-width:0;text-align:right;color:var(--mute);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.sect > summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg) translateY(-3px);flex:none;margin-left:4px;transition:transform .15s}
+details.sect[open] > summary::after{transform:rotate(-135deg) translateY(-2px)}
+details.sect > .in{padding:0 16px 16px;border-top:1px solid var(--rule)}
+details.sect > .in > p:first-child,details.sect > .in > div:first-child{margin-top:14px}
+.savebar{position:sticky;bottom:calc(var(--navh) + 10px);z-index:6;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--ink);color:#fff;border-radius:var(--r);padding:10px 10px 10px 16px;margin-top:12px;box-shadow:0 8px 24px rgba(19,33,58,.25)}
+.savebar span{font-weight:600;font-size:14px}
+.savebar button{min-width:110px}
+
+/* dialog: a bottom sheet on phones */
+dialog{border:none;border-radius:16px;padding:0;width:min(640px,94vw);max-height:88vh;color:var(--ink)}
+dialog::backdrop{background:rgba(19,33,58,.45)}
+.dlg{padding:16px}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlg pre{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.55;background:var(--bg);border-radius:8px;padding:12px;max-height:55vh;overflow:auto;margin:8px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(18px + var(--navh) + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.err{background:var(--err)}
-@media(max-width:640px){
+
+@media (max-width:719px){
+  :root{--navh:calc(62px + env(safe-area-inset-bottom))}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--rule);padding:4px 6px env(safe-area-inset-bottom);gap:0;box-shadow:0 -4px 16px rgba(19,33,58,.05)}
+  nav.tabs a{flex-direction:column;gap:2px;font-size:11.5px;padding:7px 2px 6px;border-bottom:0;min-height:58px}
+  nav.tabs a.on{color:var(--magenta)}
+  nav.tabs a.on::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--magenta)}
+  nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px)}
   .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(3){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--rule)}
   .grid2,.filters{grid-template-columns:1fr}
-  .stat b{font-size:22px}
+  dialog{width:100vw;max-width:100vw;margin:auto 0 0;border-radius:18px 18px 0 0;max-height:92vh}
+  .dlg{padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
 }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap bar">
     <div class="logo"><i></i>Shree Pharma</div>
-    <span class="pill" id="gpill">Loading…</span>
+    <a class="pill" id="gpill" href="#settings">Loading…</a>
   </div>
   <div class="wrap">
     <nav class="tabs" aria-label="Sections">
-      <a href="#home" data-tab="home">Home</a>
-      <a href="#leads" data-tab="leads">Leads</a>
-      <a href="#enquiries" data-tab="enquiries">Enquiries<span class="badge" id="enqBadge" hidden></span></a>
-      <a href="#settings" data-tab="settings">Settings</a>
+      <a href="#home" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5Z"/></svg><span>Home</span></a>
+      <a href="#leads" data-tab="leads"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.5"/><path d="M3 19.5c.6-3.3 3-5 6-5s5.4 1.7 6 5M16 5.5a3.2 3.2 0 0 1 0 6.2M18 14.8c1.7.6 2.7 2.2 3 4.7"/></svg><span>Leads</span></a>
+      <a href="#enquiries" data-tab="enquiries" aria-label="Quote requests"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4Z"/><path d="M8 9.5h8M8 12.5h5"/></svg><span>Requests</span><span class="badge" id="enqBadge" hidden></span></a>
+      <a href="#settings" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg><span>Settings</span></a>
     </nav>
   </div>
 </header>
@@ -116,29 +189,42 @@ dialog::backdrop{background:rgba(20,20,30,.45)}
 
 <!-- HOME -->
 <section id="tab-home" data-panel="home">
+  <h1 class="sr-only">Home</h1>
   <div id="banners"></div>
-  <div class="stats">
-    <div class="stat hi"><b id="sReady">–</b><span>Ready to approve</span></div>
+  <div class="next" id="nextCard" hidden>
+    <div class="ic" id="nextIcon"></div>
+    <div style="min-width:0;flex:1">
+      <h2 id="nextTitle"></h2>
+      <p id="nextText"></p>
+      <div class="row" id="nextActions"></div>
+    </div>
+  </div>
+  <div id="homeMsg" role="status"></div>
+
+  <div class="card" id="approveCard" hidden>
+    <div class="card-head">
+      <h2>Ready to send <span class="count" id="readyCount"></span></h2>
+      <button class="ghost" id="selAll" type="button">Select none</button>
+    </div>
+    <p class="muted" style="margin:0">Saved as drafts in your Gmail. Tap a company to read its email.</p>
+    <div class="list" id="readyList"></div>
+    <div class="actbar">
+      <button id="sendSel" type="button">Send selected</button>
+      <button class="line" id="skipSel" type="button">Skip</button>
+    </div>
+  </div>
+
+  <div class="stats" aria-label="Today at a glance">
+    <div class="stat"><b id="sReady">–</b><span>Ready to approve</span></div>
     <div class="stat"><b id="sToday">–</b><span>Sent today</span></div>
     <div class="stat"><b id="sReplied">–</b><span>Replies</span></div>
     <div class="stat"><b id="sNew">–</b><span>Not yet emailed</span></div>
   </div>
 
-  <div class="card">
-    <h2>Approve and send</h2>
-    <p class="muted" style="margin:0">These emails are saved as drafts in your Gmail. Tap a name to read one. Approved emails go out a few at a time, every 10 minutes.</p>
-    <div class="row" style="margin-top:12px">
-      <button id="sendSel">Send selected</button>
-      <button class="line" id="skipSel">Skip selected</button>
-      <button class="ghost" id="selAll">Select all</button>
-    </div>
-    <div class="list" id="readyList"></div>
-    <div class="row" style="margin-top:12px">
-      <button class="line" id="makeDrafts">Create drafts now</button>
-      <button class="line" id="checkNow">Check replies now</button>
-      <button class="ghost" id="pauseBtn">Pause sending</button>
-    </div>
-    <div id="homeMsg"></div>
+  <div class="tools" aria-label="More actions">
+    <button class="ghost" id="makeDrafts" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Create drafts now</button>
+    <button class="ghost" id="checkNow" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4.5h-4.5"/></svg>Check replies now</button>
+    <button class="ghost" id="pauseBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>Pause sending</button>
   </div>
 
   <div class="card">
@@ -146,128 +232,149 @@ dialog::backdrop{background:rgba(20,20,30,.45)}
     <div class="list" id="replyList"></div>
   </div>
 
-  <div class="card">
-    <h2>Recent activity</h2>
-    <div class="list" id="logList"></div>
-  </div>
+  <details class="sect">
+    <summary><h2>Recent activity</h2><span class="sum"></span></summary>
+    <div class="in"><div class="list" id="logList"></div></div>
+  </details>
 </section>
 
 <!-- LEADS -->
 <section id="tab-leads" data-panel="leads" hidden>
+  <h1 class="sr-only">Leads</h1>
   <div class="card">
-    <h2>Import leads from CSV</h2>
-    <p class="muted" style="margin:0">Any CSV with an email column works. Duplicates and people already in your list are skipped automatically.</p>
-    <label for="csv">CSV file</label>
-    <input type="file" id="csv" accept=".csv,text/csv,text/plain">
-    <label for="ctry">Country for this file</label>
-    <input type="text" id="ctry" placeholder="Used when a row has no country, e.g. United Kingdom" autocomplete="off">
-    <div class="help" id="mapInfo"></div>
-    <div class="row" style="margin-top:12px"><button id="importBtn" disabled>Import leads</button></div>
-    <div class="progress" id="impBar" hidden><i></i></div>
-    <div id="importMsg"></div>
-  </div>
+    <div class="card-head">
+      <h2>Leads <span class="count" id="leadTotal"></span></h2>
+      <div class="row">
+        <button class="ghost" id="exportBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Download CSV</button>
+        <button id="importToggle" type="button" aria-expanded="false" aria-controls="importPanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V9m0 0-4 4m4-4 4 4M5 4h14"/></svg>Import CSV</button>
+      </div>
+    </div>
 
-  <div class="card">
-    <div class="row" style="justify-content:space-between"><h2 style="margin:0">All leads <span class="muted" id="leadTotal"></span></h2><button class="line" id="exportBtn">Download CSV</button></div>
+    <div id="importPanel" hidden>
+      <div class="alert warn" style="margin-top:6px;font-weight:500">Any CSV with an email column works. Duplicates and people already in your list are skipped automatically.</div>
+      <label for="csv">CSV file</label>
+      <input type="file" id="csv" accept=".csv,text/csv,text/plain">
+      <label for="ctry">Country for this file <span class="muted" style="font-weight:400">(optional)</span></label>
+      <input type="text" id="ctry" placeholder="Used when a row has no country, e.g. United Kingdom" autocomplete="off">
+      <div class="help" id="mapInfo"></div>
+      <div class="row" style="margin-top:12px"><button id="importBtn" type="button" disabled>Import leads</button><button class="ghost" id="importClose" type="button">Cancel</button></div>
+      <div class="progress" id="impBar" hidden><i></i></div>
+      <div id="importMsg"></div>
+      <hr style="border:0;border-top:1px solid var(--rule);margin:16px 0 4px">
+    </div>
+
     <div class="filters">
       <input type="search" id="lq" placeholder="Search email, company or name" aria-label="Search leads">
       <select id="lstatus" aria-label="Filter by status"><option value="">All statuses</option></select>
       <select id="lcountry" aria-label="Filter by country"><option value="">All countries</option></select>
     </div>
     <div class="list" id="leadList"></div>
-    <div class="pager"><button class="line" id="prevPg">Previous</button><span class="muted" id="pgInfo"></span><button class="line" id="nextPg">Next</button></div>
+    <div class="pager"><button class="line" id="prevPg" type="button">Previous</button><span class="muted" id="pgInfo"></span><button class="line" id="nextPg" type="button">Next</button></div>
   </div>
 </section>
 
-<!-- ENQUIRIES -->
+<!-- QUOTE REQUESTS -->
 <section id="tab-enquiries" data-panel="enquiries" hidden>
+  <h1 class="sr-only">Quote requests</h1>
   <div class="card">
-    <h2>Website quote requests</h2>
-    <p class="muted" style="margin:0">Requests from the quote form on your website. Mark them Replied or Closed to keep this list tidy.</p>
+    <h2>Quote requests from your website</h2>
+    <p class="muted" style="margin:0">Reply to each buyer, then mark it Replied or Closed to keep this list tidy.</p>
     <div class="list" id="enqList"></div>
-    <div class="pager"><button class="line" id="ePrev">Previous</button><span class="muted" id="ePg"></span><button class="line" id="eNext">Next</button></div>
+    <div class="pager"><button class="line" id="ePrev" type="button">Previous</button><span class="muted" id="ePg"></span><button class="line" id="eNext" type="button">Next</button></div>
   </div>
 </section>
 
 <!-- SETTINGS -->
 <section id="tab-settings" data-panel="settings" hidden>
-  <div class="card">
-    <h2>Gmail connection</h2>
-    <div id="gmailBox" class="muted">Loading…</div>
-    <div class="row" style="margin-top:12px">
-      <a class="btn" id="connectBtn" href="/app/oauth/start">Connect Gmail</a>
-      <button class="line" id="testBtn">Send me a test email</button>
-      <button class="danger" id="disconnectBtn">Disconnect</button>
+  <h1 class="sr-only">Settings</h1>
+  <details class="sect" id="secGmail">
+    <summary><h2>Gmail</h2><span class="sum" id="gmailSum"></span></summary>
+    <div class="in">
+      <div id="gmailBox" class="muted">Loading…</div>
+      <div class="row" style="margin-top:12px">
+        <a class="btn" id="connectBtn" href="/app/oauth/start">Connect Gmail</a>
+        <button class="line" id="testBtn" type="button">Send me a test email</button>
+        <button class="danger" id="disconnectBtn" type="button">Disconnect</button>
+      </div>
+      <div id="gmailMsg"></div>
+      <details style="margin-top:14px"><summary class="muted" style="cursor:pointer">Setup details for Google Cloud</summary>
+        <p class="help">Authorized redirect URI to add in Google Cloud (add one for each address you open this dashboard from):</p>
+        <code class="code" id="redirUri"></code>
+      </details>
     </div>
-    <div id="gmailMsg"></div>
-    <details style="margin-top:14px"><summary class="muted">Setup details for Google Cloud</summary>
-      <p class="help">Authorized redirect URI to add in Google Cloud (add one for each address you open this dashboard from):</p>
-      <code class="code" id="redirUri"></code>
-    </details>
-  </div>
+  </details>
 
-  <div class="card">
-    <h2>Phone notifications</h2>
-    <p class="help" style="margin-top:0">Get a pop-up on this phone or computer when a buyer replies, a website quote request arrives, or drafts are ready to approve.</p>
-    <div id="pushBox" class="muted">Loading…</div>
-    <div class="row" style="margin-top:12px">
-      <button type="button" id="pushOnBtn" hidden>Turn on for this device</button>
-      <button type="button" class="line" id="pushTestBtn" hidden>Send a test notification</button>
-      <button type="button" class="danger" id="pushOffBtn" hidden>Turn off for this device</button>
+  <details class="sect" id="secPush">
+    <summary><h2>Phone notifications</h2><span class="sum" id="pushSum"></span></summary>
+    <div class="in">
+      <p class="help" style="margin-top:14px">Get a pop-up on this phone or computer when a buyer replies, a website quote request arrives, or drafts are ready to approve.</p>
+      <div id="pushBox" class="muted">Loading…</div>
+      <div class="row" style="margin-top:12px">
+        <button type="button" id="pushOnBtn" hidden>Turn on for this device</button>
+        <button type="button" class="line" id="pushTestBtn" hidden>Send a test notification</button>
+        <button type="button" class="danger" id="pushOffBtn" hidden>Turn off for this device</button>
+      </div>
+      <div id="pushMsg"></div>
+      <div class="list" id="pushList" style="margin-top:10px"></div>
     </div>
-    <div id="pushMsg"></div>
-    <div class="list" id="pushList" style="margin-top:10px"></div>
-  </div>
+  </details>
 
   <form id="setForm" novalidate>
-    <div class="card">
-      <h2>Your business</h2>
-      <div class="grid2">
-        <div><label for="your_name">Your name (email signature)</label><input type="text" id="your_name" name="your_name"></div>
-        <div><label for="company_name">Company name</label><input type="text" id="company_name" name="company_name"></div>
-        <div><label for="whatsapp">WhatsApp number</label><input type="text" id="whatsapp" name="whatsapp"></div>
-        <div><label for="alert_email">Send alerts to</label><input type="email" id="alert_email" name="alert_email"><div class="help">Replies, website requests and the daily summary go here.</div></div>
+    <details class="sect" id="secBiz">
+      <summary><h2>Your business</h2><span class="sum" id="bizSum"></span></summary>
+      <div class="in">
+        <div class="grid2">
+          <div><label for="your_name">Your name (email signature)</label><input type="text" id="your_name" name="your_name"></div>
+          <div><label for="company_name">Company name</label><input type="text" id="company_name" name="company_name"></div>
+          <div><label for="whatsapp">WhatsApp number</label><input type="text" id="whatsapp" name="whatsapp"></div>
+          <div><label for="alert_email">Send alerts to</label><input type="email" id="alert_email" name="alert_email"><div class="help">Replies, website requests and the daily summary go here.</div></div>
+        </div>
+        <label for="address">Business postal address</label>
+        <input type="text" id="address" name="address" placeholder="Street, city, state, PIN, India">
+        <div class="help">Shown in your email signature. US law requires a postal address in marketing emails.</div>
+        <div class="grid2">
+          <div><label for="website">Website address</label><input type="url" id="website" name="website" placeholder="Leave empty to use automatically"><div class="help" id="autoWeb"></div></div>
+          <div><label for="brochure_link">Brochure link</label><input type="url" id="brochure_link" name="brochure_link" placeholder="Leave empty to use automatically"><div class="help" id="autoBro"></div></div>
+        </div>
       </div>
-      <label for="address">Business postal address</label>
-      <input type="text" id="address" name="address" placeholder="Street, city, state, PIN, India">
-      <div class="help">Shown in your email signature. US law requires a postal address in marketing emails.</div>
-      <div class="grid2">
-        <div><label for="website">Website address</label><input type="url" id="website" name="website" placeholder="Leave empty to use automatically"><div class="help" id="autoWeb"></div></div>
-        <div><label for="brochure_link">Brochure link</label><input type="url" id="brochure_link" name="brochure_link" placeholder="Leave empty to use automatically"><div class="help" id="autoBro"></div></div>
+    </details>
+
+    <details class="sect" id="secSend">
+      <summary><h2>Sending</h2><span class="sum" id="sendSum"></span></summary>
+      <div class="in">
+        <div class="grid2">
+          <div><label for="daily_limit">Emails per day (first emails + follow-ups)</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="150" inputmode="numeric"><div class="help">Start at 20. Raise slowly: 35, 50, 70, 90.</div></div>
+          <div><label for="followup_days">Follow up after (business days)</label><input type="number" id="followup_days" name="followup_days" min="1" max="30" inputmode="numeric"></div>
+          <div><label for="stop_days">Mark "No reply" after the follow-up (business days)</label><input type="number" id="stop_days" name="stop_days" min="1" max="60" inputmode="numeric"></div>
+          <div><label for="auto_drafts">Prepare drafts automatically</label><select id="auto_drafts" name="auto_drafts"><option value="yes">Yes, every weekday from 9 AM</option><option value="no">No, only when I tap Create drafts</option></select></div>
+          <div><label for="paused">Sending</label><select id="paused" name="paused"><option value="no">On</option><option value="yes">Paused</option></select></div>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>Sending</h2>
-      <div class="grid2">
-        <div><label for="daily_limit">Emails per day (first emails + follow-ups)</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="150" inputmode="numeric"><div class="help">Start at 20. Raise slowly: 35, 50, 70, 90.</div></div>
-        <div><label for="followup_days">Follow up after (business days)</label><input type="number" id="followup_days" name="followup_days" min="1" max="30" inputmode="numeric"></div>
-        <div><label for="stop_days">Mark "No reply" after the follow-up (business days)</label><input type="number" id="stop_days" name="stop_days" min="1" max="60" inputmode="numeric"></div>
-        <div><label for="auto_drafts">Prepare drafts automatically</label><select id="auto_drafts" name="auto_drafts"><option value="yes">Yes, every weekday from 9 AM</option><option value="no">No, only when I tap Create drafts</option></select></div>
-        <div><label for="paused">Sending</label><select id="paused" name="paused"><option value="no">On</option><option value="yes">Paused</option></select></div>
+    <details class="sect" id="secTpl">
+      <summary><h2>Email templates</h2><span class="sum">First email and follow-up</span></summary>
+      <div class="in">
+        <p class="help">Words in double curly brackets fill in for each lead. Tap one to copy it: <span id="phList"></span></p>
+        <label for="tpl_first_subject">First email: subject</label>
+        <input type="text" id="tpl_first_subject" name="tpl_first_subject">
+        <label for="tpl_first_body">First email: text</label>
+        <textarea id="tpl_first_body" name="tpl_first_body"></textarea>
+        <div class="row" style="margin-top:6px"><button type="button" class="ghost" data-preview="first">Preview</button><button type="button" class="ghost" data-reset="tpl_first_body">Restore original text</button></div>
+        <label for="tpl_fu_body">Follow-up text (sent as a reply in the same email thread)</label>
+        <textarea id="tpl_fu_body" name="tpl_fu_body"></textarea>
+        <div class="row" style="margin-top:6px"><button type="button" class="ghost" data-preview="fu">Preview</button><button type="button" class="ghost" data-reset="tpl_fu_body">Restore original text</button></div>
       </div>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>Email templates</h2>
-      <p class="help" style="margin-top:0">Words in double curly brackets fill in for each lead. Tap one to copy it: <span id="phList"></span></p>
-      <label for="tpl_first_subject">First email: subject</label>
-      <input type="text" id="tpl_first_subject" name="tpl_first_subject">
-      <label for="tpl_first_body">First email: text</label>
-      <textarea id="tpl_first_body" name="tpl_first_body"></textarea>
-      <div class="row" style="margin-top:6px"><button type="button" class="ghost" data-reset="tpl_first_body">Restore original text</button><button type="button" class="ghost" data-preview="first">Preview</button></div>
-      <label for="tpl_fu_body">Follow-up text (sent as a reply in the same email thread)</label>
-      <textarea id="tpl_fu_body" name="tpl_fu_body"></textarea>
-      <div class="row" style="margin-top:6px"><button type="button" class="ghost" data-reset="tpl_fu_body">Restore original text</button><button type="button" class="ghost" data-preview="fu">Preview</button></div>
-    </div>
-
-    <div class="savebar"><button type="submit" id="saveBtn" style="width:100%">Save settings</button><div id="setMsg"></div></div>
+    <div class="savebar" id="saveBar" hidden><span>You have unsaved changes</span><button type="submit" id="saveBtn">Save</button></div>
+    <div id="setMsg" role="status"></div>
   </form>
 
-  <div class="card">
-    <h2>Activity log</h2>
-    <div class="list" id="fullLog"></div>
-  </div>
+  <details class="sect">
+    <summary><h2>Activity log</h2><span class="sum">Last 60 events</span></summary>
+    <div class="in"><div class="list" id="fullLog"></div></div>
+  </details>
   <div class="card">
     <div class="row" style="justify-content:space-between"><span class="muted">Signed in to this dashboard</span><a class="btn line" href="/app/logout">Log out</a></div>
   </div>
@@ -275,7 +382,7 @@ dialog::backdrop{background:rgba(20,20,30,.45)}
 </main>
 
 <dialog id="dlg"><div class="dlg">
-  <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b id="dTitle" style="overflow-wrap:anywhere"></b><button class="ghost" id="dClose" type="button">Close</button></div>
+  <div class="dlg-head"><b id="dTitle" style="overflow-wrap:anywhere"></b><button class="ghost" id="dClose" type="button">Close</button></div>
   <div id="dBody"></div>
 </div></dialog>
 
@@ -284,7 +391,7 @@ dialog::backdrop{background:rgba(20,20,30,.45)}
 'use strict';
 const $ = id => document.getElementById(id);
 let STATUS = {}, SUMMARY = null, SETTINGS = null, PARSED = null;
-let leadPage = 1, enqPage = 1, leadTimer = null;
+let leadPage = 1, enqPage = 1, leadTimer = null, OPEN_IMPORT = false, DIRTY = false;
 
 /* ---------- helpers ---------- */
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -303,13 +410,13 @@ function msg(el, text, kind) {
 let toastT;
 function toast(text, bad) {
   let t = document.querySelector('.toast');
-  if (!t) { t = document.createElement('div'); document.body.appendChild(t); }
+  if (!t) { t = document.createElement('div'); t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
   t.className = 'toast' + (bad ? ' err' : ''); t.textContent = text; t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600);
 }
 async function busy(btn, fn, text) {
-  const old = btn.textContent; btn.disabled = true; if (text) btn.textContent = text;
-  try { return await fn(); } finally { btn.disabled = false; btn.textContent = old; }
+  const old = btn.innerHTML; btn.disabled = true; if (text) btn.textContent = text;
+  try { return await fn(); } finally { btn.disabled = false; btn.innerHTML = old; }
 }
 async function api(path, body) {
   const opt = { method: body ? 'POST' : 'GET', headers: { 'x-sp': '1' }, credentials: 'same-origin' };
@@ -342,8 +449,8 @@ window.addEventListener('hashchange', showTab);
 /* ---------- home ---------- */
 function setPill(g) {
   const p = $('gpill');
-  if (g.connected && !g.problem) { p.textContent = g.email; p.className = 'pill'; }
-  else { p.textContent = g.problem ? 'Gmail needs reconnecting' : 'Gmail not connected'; p.className = 'pill off'; }
+  if (g.connected && !g.problem) { p.textContent = g.email; p.title = 'Gmail connected: ' + g.email; p.className = 'pill'; }
+  else { p.textContent = g.problem ? 'Gmail needs reconnecting' : 'Gmail not connected'; p.title = 'Open Gmail settings'; p.className = 'pill off'; }
 }
 async function loadHome() {
   let d;
@@ -358,8 +465,6 @@ async function loadHome() {
   const badge = $('enqBadge'); badge.hidden = !d.newEnquiries; badge.textContent = d.newEnquiries;
 
   let ban = '';
-  if (!d.gmail.connected) ban += '<div class="alert warn"><b>Connect your outreach Gmail to start.</b><div class="row"><a class="btn" href="#settings">Open Settings</a></div></div>';
-  else if (d.gmail.problem) ban += '<div class="alert err">' + esc(d.gmail.problem) + '<div class="row"><a class="btn" href="/app/oauth/start">Reconnect Gmail</a></div></div>';
   if (d.paused) ban += '<div class="alert warn"><b>Sending is paused.</b> Approved emails wait until you resume.<div class="row"><button id="resumeBtn">Resume sending</button></div></div>';
   if (d.queued) ban += '<div class="alert ok">' + d.queued + ' approved email(s) waiting to go out. About 3 are sent every 10 minutes.</div>';
   (d.warnings || []).forEach(w => { ban += '<div class="alert warn">' + esc(w) + '</div>'; });
@@ -367,19 +472,25 @@ async function loadHome() {
   if ($('resumeBtn')) $('resumeBtn').onclick = () => setPaused(false);
   $('pauseBtn').hidden = d.paused;
 
-  $('readyList').innerHTML = d.ready.length ? d.ready.map(r =>
+  setNext(d);
+  $('approveCard').hidden = !d.ready.length;
+  $('readyCount').textContent = d.ready.length ? '(' + d.ready.length + ')' : '';
+  $('readyList').innerHTML = d.ready.map(r =>
     '<div class="item"><input type="checkbox" class="sel" value="' + r.id + '" checked aria-label="Select ' + esc(r.company || r.email) + '">' +
     '<div class="t"><b><a href="#" data-prev="' + r.id + '">' + esc(r.company || r.email) + '</a> ' + (r.status === 'fu_drafted' ? '<span class="tag">Follow-up</span>' : '') + '</b>' +
-    '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + '</small></div></div>').join('')
-    : '<div class="empty">' + (d.gmail.connected ? 'Nothing waiting. Tap "Create drafts now", or import leads.' : 'Connect Gmail in Settings, then import leads.') + '</div>';
-  $('sendSel').disabled = $('skipSel').disabled = !d.ready.length;
+    '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + '</small></div></div>').join('');
+  updateSelection();
 
-  $('replyList').innerHTML = d.replies.length ? d.replies.map(r =>
-    '<div class="item"><div class="t"><b>' + esc(r.company || r.email) + ' <span class="' + tagClass(r.status) + '">' + esc(label(r.status)) + '</span></b>' +
-    '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + ' · ' + when(r.replied_at) + '</small>' +
-    (r.reply_snippet ? '<small class="wrapline">"' + esc(r.reply_snippet.slice(0, 160)) + '"</small>' : '') + '</div>' +
-    (r.thread_id && d.gmail.email ? '<a class="btn" style="min-height:36px;padding:6px 12px" target="_blank" rel="noopener" href="https://mail.google.com/mail/?authuser=' + encodeURIComponent(d.gmail.email) + '#all/' + encodeURIComponent(r.thread_id) + '">Open</a>' : '') + '</div>').join('')
-    : '<div class="empty">No replies yet. They appear here within 10 minutes.</div>';
+  const chev = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+  $('replyList').innerHTML = d.replies.length ? d.replies.map(r => {
+    const inner = '<div class="t"><b>' + esc(r.company || r.email) + ' <span class="' + tagClass(r.status) + '">' + esc(label(r.status)) + '</span></b>' +
+      '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + ' · ' + when(r.replied_at) + '</small>' +
+      (r.reply_snippet ? '<small class="wrapline">"' + esc(r.reply_snippet.slice(0, 160)) + '"</small>' : '') + '</div>';
+    return r.thread_id && d.gmail.email
+      ? '<a class="item" target="_blank" rel="noopener" aria-label="Open the conversation with ' + esc(r.company || r.email) + ' in Gmail" href="https://mail.google.com/mail/?authuser=' + encodeURIComponent(d.gmail.email) + '#all/' + encodeURIComponent(r.thread_id) + '">' + inner + chev + '</a>'
+      : '<div class="item">' + inner + '</div>';
+  }).join('')
+    : '<div class="empty">No replies yet. Buyer replies show up here within 10 minutes.</div>';
 
   $('logList').innerHTML = d.log.length ? d.log.map(logRow).join('') : '<div class="empty">Nothing yet.</div>';
 }
@@ -388,7 +499,44 @@ function logRow(l) {
     '<small>' + when(l.at) + (l.detail ? ' · ' + esc(l.detail) : '') + '</small></div></div>';
 }
 function selected() { return [...document.querySelectorAll('.sel:checked')].map(x => Number(x.value)); }
-$('selAll').onclick = () => { const boxes = [...document.querySelectorAll('.sel')]; const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); };
+function updateSelection() {
+  const boxes = [...document.querySelectorAll('.sel')], n = boxes.filter(b => b.checked).length;
+  $('sendSel').textContent = n ? 'Send ' + n + ' selected' : 'Select emails to send';
+  $('sendSel').disabled = $('skipSel').disabled = !n;
+  $('selAll').textContent = boxes.length && n === boxes.length ? 'Select none' : 'Select all';
+}
+$('selAll').onclick = () => { const boxes = [...document.querySelectorAll('.sel')]; const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); updateSelection(); };
+$('readyList').addEventListener('change', e => { if (e.target.classList.contains('sel')) updateSelection(); });
+
+/* the one thing to do next */
+const ICONS = {
+  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>',
+  send: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4Z"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V9m0 0-4 4m4-4 4 4M5 4h14"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  ok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>'
+};
+function setNext(d) {
+  const b = d.byStatus || {};
+  let n = null;
+  if (!d.gmail.connected) n = { icon: 'mail', title: 'Connect your outreach Gmail', text: 'Drafts, sending and reply checks all use this Gmail account.', btn: '<a class="btn" href="/app/oauth/start">Connect Gmail</a>' };
+  else if (d.gmail.problem) n = { icon: 'warn', title: 'Gmail needs reconnecting', text: d.gmail.problem, btn: '<a class="btn" href="/app/oauth/start">Reconnect Gmail</a>' };
+  else if (d.ready.length) n = { icon: 'send', title: d.ready.length + ' email' + (d.ready.length === 1 ? ' is' : 's are') + ' ready to approve', text: 'Check them below, then send. They go out about 3 every 10 minutes.', btn: '' };
+  else if (b.new) n = { icon: 'plus', title: b.new + ' lead' + (b.new === 1 ? ' has' : 's have') + ' not been emailed yet', text: 'Create drafts now, or wait: drafts are prepared automatically on weekdays from 9 AM.', btn: '<button type="button" id="nextDrafts">Create drafts now</button>' };
+  else if (!d.total) n = { icon: 'upload', title: 'Import your first leads', text: 'Upload a CSV file with an email column. Duplicates are skipped automatically.', btn: '<a class="btn" href="#leads" id="nextImport">Import CSV</a>' };
+  else n = { icon: 'ok', title: 'All caught up', text: d.queued ? d.queued + ' approved email(s) are on their way.' : 'Nothing needs you right now. Import more leads when you are ready.', btn: '', calm: true };
+  $('nextCard').hidden = false;
+  $('nextCard').className = 'next' + (n.calm ? ' calm' : '');
+  $('nextIcon').innerHTML = ICONS[n.icon];
+  $('nextTitle').textContent = n.title;
+  $('nextText').textContent = n.text;
+  $('nextActions').innerHTML = n.btn;
+  $('nextActions').hidden = !n.btn;
+  $('makeDrafts').hidden = n.icon === 'plus'; // the card already offers it
+  if ($('nextDrafts')) $('nextDrafts').onclick = () => $('makeDrafts').click();
+  if ($('nextImport')) $('nextImport').onclick = () => { OPEN_IMPORT = true; };
+}
 $('readyList').addEventListener('click', async e => {
   const a = e.target.closest('[data-prev]'); if (!a) return;
   e.preventDefault();
@@ -464,14 +612,23 @@ async function loadLeads() {
     sel.value = cur;
   }
   $('leadTotal').textContent = '(' + d.total + ')';
+  const filtering = $('lq').value.trim() || $('lstatus').value || $('lcountry').value;
+  if (OPEN_IMPORT || (!d.total && !filtering)) { OPEN_IMPORT = false; setImport(true); }
   $('leadList').innerHTML = d.rows.length ? d.rows.map(r =>
     '<div class="item click" data-lead="' + r.id + '" tabindex="0" role="button"><div class="t"><b>' + esc(r.company || r.email) + '</b>' +
     '<small>' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + '</small></div><span class="' + tagClass(r.status) + '">' + esc(label(r.status)) + '</span></div>').join('')
-    : '<div class="empty">' + (d.total ? 'No leads on this page.' : 'No leads match. Import a CSV above.') + '</div>';
+    : '<div class="empty">' + (d.total ? 'No leads on this page.' : filtering ? 'No leads match this search.' : 'No leads yet. Import a CSV file to start.') + '</div>';
   const pages = Math.max(1, Math.ceil(d.total / d.per));
   $('pgInfo').textContent = 'Page ' + d.page + ' of ' + pages;
   $('prevPg').disabled = d.page <= 1; $('nextPg').disabled = d.page >= pages;
 }
+function setImport(open) {
+  $('importPanel').hidden = !open;
+  $('importToggle').hidden = open;
+  $('importToggle').setAttribute('aria-expanded', open);
+}
+$('importToggle').onclick = () => { setImport(true); $('csv').focus(); };
+$('importClose').onclick = () => setImport(false);
 $('lq').addEventListener('input', () => { clearTimeout(leadTimer); leadTimer = setTimeout(() => { leadPage = 1; loadLeads(); }, 350); });
 $('lstatus').onchange = $('lcountry').onchange = () => { leadPage = 1; loadLeads(); };
 $('prevPg').onclick = () => { leadPage--; loadLeads(); };
@@ -640,13 +797,13 @@ async function loadEnquiries() {
   const waNum = p => String(p || '').replace(/[^\d]/g, '');
   $('enqList').innerHTML = d.rows.length ? d.rows.map(r =>
     '<div class="item"><div class="t"><b>' + esc(r.company || r.name) + ' <span class="' + (r.status === 'new' ? 'tag' : 'tag grey') + '">' + (r.status === 'new' ? 'New' : r.status === 'replied' ? 'Replied' : 'Closed') + '</span></b>' +
-    '<small>' + esc(r.name) + ' · ' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + (r.quantity ? ' · Qty ' + esc(r.quantity) : '') + '</small>' +
+    '<small>' + esc(r.name) + ' · ' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + (r.quantity ? ' · ' + (/vial/i.test(r.quantity) ? '' : 'Qty ') + esc(r.quantity) : '') + '</small>' +
     '<small>' + when(r.created_at) + (r.phone ? ' · ' + esc(r.phone) : '') + '</small>' +
     (r.message ? '<small class="wrapline">' + esc(r.message) + '</small>' : '') +
     '<div class="row" style="margin-top:8px">' +
-    '<a class="btn" style="min-height:36px;padding:6px 12px" href="mailto:' + esc(r.email) + '?subject=' + encodeURIComponent('Your quote request – Shree Pharma') + '">Reply by email</a>' +
-    (waNum(r.phone).length >= 8 ? '<a class="btn line" style="min-height:36px;padding:6px 12px" target="_blank" rel="noopener" href="https://wa.me/' + waNum(r.phone) + '">WhatsApp</a>' : '') +
-    '<select data-enq="' + r.id + '" aria-label="Status" style="width:auto;min-height:36px;padding:6px"><option value="new"' + (r.status === 'new' ? ' selected' : '') + '>New</option><option value="replied"' + (r.status === 'replied' ? ' selected' : '') + '>Replied</option><option value="closed"' + (r.status === 'closed' ? ' selected' : '') + '>Closed</option></select>' +
+    '<a class="btn" href="mailto:' + esc(r.email) + '?subject=' + encodeURIComponent('Your quote request – Shree Pharma') + '">Reply by email</a>' +
+    (waNum(r.phone).length >= 8 ? '<a class="btn line" target="_blank" rel="noopener" href="https://wa.me/' + waNum(r.phone) + '">WhatsApp</a>' : '') +
+    '<select data-enq="' + r.id + '" aria-label="Status" style="width:auto"><option value="new"' + (r.status === 'new' ? ' selected' : '') + '>New</option><option value="replied"' + (r.status === 'replied' ? ' selected' : '') + '>Replied</option><option value="closed"' + (r.status === 'closed' ? ' selected' : '') + '>Closed</option></select>' +
     '</div></div></div>').join('')
     : '<div class="empty">No quote requests yet. They appear here as soon as someone sends the form on your website.</div>';
   const pages = Math.max(1, Math.ceil(d.total / d.per));
@@ -680,6 +837,13 @@ async function loadSettings() {
   else if (g.problem) h = '<div class="alert err">' + esc(g.problem) + '</div>';
   else h = '<p style="margin:0">Not connected. Tap <b>Connect Gmail</b> and sign in with your <b>outreach</b> Gmail account.</p>';
   $('gmailBox').innerHTML = h;
+  $('gmailSum').textContent = !d.googleKeys ? 'Keys missing' : g.connected && !g.problem ? g.email : g.problem ? 'Needs reconnecting' : 'Not connected';
+  if (!g.connected || g.problem || !d.googleKeys) $('secGmail').open = true;
+  const v = d.values;
+  $('bizSum').textContent = v.address ? (v.company_name || '') : 'Add your postal address';
+  $('sendSum').textContent = (isOn(v.paused) ? 'Paused' : v.daily_limit + ' a day') + ', follow up after ' + v.followup_days + ' days';
+  if (!v.address) $('secBiz').open = true;
+  setDirty(false);
   $('connectBtn').textContent = g.connected ? 'Reconnect Gmail' : 'Connect Gmail';
   $('connectBtn').hidden = !d.googleKeys;
   $('testBtn').hidden = $('disconnectBtn').hidden = !g.connected;
@@ -693,6 +857,7 @@ document.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => {
   if (!SETTINGS) return;
   if (!confirm('Replace this text with the original? Your changes to this template will be lost after you save.')) return;
   $(b.dataset.reset).value = SETTINGS.defaults[b.dataset.reset];
+  setDirty(true);
 });
 document.querySelectorAll('[data-preview]').forEach(b => b.onclick = () => {
   const isFu = b.dataset.preview === 'fu';
@@ -704,12 +869,17 @@ document.querySelectorAll('[data-preview]').forEach(b => b.onclick = () => {
   const subject = isFu ? 'Re: ' + render(v('tpl_first_subject')) : render(v('tpl_first_subject'));
   openDialog('Preview (sample lead)', '<p style="margin:10px 0 0"><b>' + esc(subject) + '</b></p><pre>' + esc(render(v(isFu ? 'tpl_fu_body' : 'tpl_first_body'))) + '</pre>');
 });
+function isOn(x) { return /^(yes|true|1|on)$/i.test(String(x || '')); }
+function setDirty(on) { DIRTY = on; $('saveBar').hidden = !on; }
+$('setForm').addEventListener('input', () => { setDirty(true); msg($('setMsg'), ''); });
+$('setForm').addEventListener('change', () => setDirty(true));
+window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); e.returnValue = ''; } });
 $('setForm').addEventListener('submit', e => {
   e.preventDefault();
   busy($('saveBtn'), async () => {
     const body = {};
     FIELDS_SET.forEach(k => { const el = $(k); if (el) body[k] = el.value; });
-    try { await api('/api/settings', body); msg($('setMsg'), 'Settings saved.', 'ok'); toast('Settings saved'); SUMMARY = null; loadSettings(); }
+    try { await api('/api/settings', body); setDirty(false); msg($('setMsg'), 'Settings saved.', 'ok'); toast('Settings saved'); SUMMARY = null; loadSettings(); }
     catch (err) { msg($('setMsg'), err.message, 'err'); }
   }, 'Saving…');
 });
@@ -758,6 +928,7 @@ async function loadPush() {
     h = '<p style="margin:0">Notifications are off for this device.</p>';
   }
   $('pushBox').innerHTML = h;
+  $('pushSum').textContent = here ? 'On for this device' : PUSH.devices.length ? 'On for ' + PUSH.devices.length + ' device' + (PUSH.devices.length > 1 ? 's' : '') : 'Off';
   $('pushOnBtn').hidden = !pushSupported() || Notification.permission === 'denied' || here;
   $('pushOffBtn').hidden = !here;
   $('pushTestBtn').hidden = !PUSH.devices.length;
