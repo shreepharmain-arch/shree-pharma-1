@@ -118,7 +118,7 @@ textarea{min-height:240px;resize:vertical;font-size:14.5px;line-height:1.55}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(19,33,58,.14)}
 .help{font-size:13px;color:var(--mute);margin-top:5px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
-.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-top:10px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-top:10px}
 .pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:14px;margin:8px 0}
 .kv dt{color:var(--mute)}
@@ -171,6 +171,17 @@ form#quoteForm > .qh:first-child{border-top:0;padding-top:0;margin-top:8px}
 details.qsect{margin-top:12px;box-shadow:none}
 .chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:14px;margin:16px 0 4px;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--magenta);flex:none;margin-top:1px}
+.listbar{display:flex;align-items:center;gap:10px;margin-top:14px}
+.listbar label{margin:0;font-size:13.5px;color:var(--mute);font-weight:600;flex:none}
+.listbar select{max-width:340px}
+.lrow .ghost{flex:none}
+.switch{position:relative;display:inline-block;width:46px;height:28px;flex:none;margin:0;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:#c9d0da;border-radius:28px;transition:background .15s}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked + span{background:var(--ok)}
+.switch input:checked + span::after{transform:translateX(18px)}
+.switch input:focus-visible + span{outline:3px solid var(--magenta);outline-offset:2px}
 @media (max-width:719px){
   :root{--navh:calc(62px + env(safe-area-inset-bottom))}
   nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--rule);padding:4px 6px env(safe-area-inset-bottom);gap:0;box-shadow:0 -4px 16px rgba(19,33,58,.05)}
@@ -237,6 +248,7 @@ details.qsect{margin-top:12px;box-shadow:none}
     </div>
   </div>
 
+  <div class="listbar" id="homeListBar" hidden><label for="homeList">Showing</label><select id="homeList" aria-label="Show one list"><option value="">All lists</option></select></div>
   <div class="stats" aria-label="Today at a glance">
     <div class="stat"><b id="sReady">–</b><span>Ready to approve</span></div>
     <div class="stat"><b id="sToday">–</b><span>Sent today</span></div>
@@ -264,6 +276,11 @@ details.qsect{margin-top:12px;box-shadow:none}
 <!-- LEADS -->
 <section id="tab-leads" data-panel="leads" hidden>
   <h1 class="sr-only">Leads</h1>
+  <div class="card" id="listsCard">
+    <div class="card-head"><h2>Lists</h2><span class="muted" id="listsLimit"></span></div>
+    <p class="help" style="margin-top:0">Each imported file is its own list. Your daily limit is split evenly across the lists that are on; if a list runs out, its share goes to the others.</p>
+    <div class="list" id="listsList"></div>
+  </div>
   <div class="card">
     <div class="card-head">
       <h2>Leads <span class="count" id="leadTotal"></span></h2>
@@ -277,6 +294,8 @@ details.qsect{margin-top:12px;box-shadow:none}
       <div class="alert warn" style="margin-top:6px;font-weight:500">Any CSV with an email column works. Duplicates and people already in your list are skipped automatically.</div>
       <label for="csv">CSV file</label>
       <input type="file" id="csv" accept=".csv,text/csv,text/plain">
+      <label for="listName">List name</label>
+      <input type="text" id="listName" autocomplete="off" placeholder="Filled in from the file name">
       <label for="ctry">Country for this file <span class="muted" style="font-weight:400">(optional)</span></label>
       <input type="text" id="ctry" placeholder="Used when a row has no country, e.g. United Kingdom" autocomplete="off">
       <div class="help" id="mapInfo"></div>
@@ -290,6 +309,7 @@ details.qsect{margin-top:12px;box-shadow:none}
       <input type="search" id="lq" placeholder="Search email, company or name" aria-label="Search leads">
       <select id="lstatus" aria-label="Filter by status"><option value="">All statuses</option></select>
       <select id="lcountry" aria-label="Filter by country"><option value="">All countries</option></select>
+      <select id="llist" aria-label="Filter by list"><option value="">All lists</option></select>
     </div>
     <div class="list" id="leadList"></div>
     <div class="pager"><button class="line" id="prevPg" type="button">Previous</button><span class="muted" id="pgInfo"></span><button class="line" id="nextPg" type="button">Next</button></div>
@@ -457,7 +477,7 @@ details.qsect{margin-top:12px;box-shadow:none}
       <summary><h2>Sending</h2><span class="sum" id="sendSum"></span></summary>
       <div class="in">
         <div class="grid2">
-          <div><label for="daily_limit">Emails per day (first emails + follow-ups)</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="150" inputmode="numeric"><div class="help">Start at 20. Raise slowly: 35, 50, 70, 90.</div></div>
+          <div><label for="daily_limit">Emails per day, all lists together</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="150" inputmode="numeric"><div class="help">Split evenly across the lists that are on. Start low and raise slowly: 20, 35, 50, 70.</div></div>
           <div><label for="followup_days">Follow up after (business days)</label><input type="number" id="followup_days" name="followup_days" min="1" max="30" inputmode="numeric"></div>
           <div><label for="stop_days">Mark "No reply" after the follow-up (business days)</label><input type="number" id="stop_days" name="stop_days" min="1" max="60" inputmode="numeric"></div>
           <div><label for="auto_drafts">Prepare drafts automatically</label><select id="auto_drafts" name="auto_drafts"><option value="yes">Yes, every weekday from 9 AM</option><option value="no">No, only when I tap Create drafts</option></select></div>
@@ -553,7 +573,7 @@ function showTab() {
   document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t);
   document.querySelectorAll('[data-tab]').forEach(a => { a.classList.toggle('on', a.dataset.tab === t); a.setAttribute('aria-current', a.dataset.tab === t ? 'page' : 'false'); });
   if (t === 'home') loadHome();
-  if (t === 'leads') loadLeads();
+  if (t === 'leads') { loadLists(); loadLeads(); }
   if (t === 'enquiries') loadEnquiries();
   if (t === 'settings') { loadSettings(); loadPush(); }
   if (t === 'quotes') loadQuotes();
@@ -569,7 +589,9 @@ function setPill(g) {
 }
 async function loadHome() {
   let d;
-  try { d = await api('/api/summary'); } catch (e) { msg($('homeMsg'), e.message, 'err'); return; }
+  try { d = await api('/api/summary' + (HOME_LIST ? '?list=' + HOME_LIST : '')); } catch (e) { msg($('homeMsg'), e.message, 'err'); return; }
+  fillListSelect($('homeList'), d.lists, 'All lists', HOME_LIST);
+  $('homeListBar').hidden = (d.lists || []).length < 2;
   SUMMARY = d; STATUS = d.statuses || STATUS;
   setPill(d.gmail);
   const b = d.byStatus || {};
@@ -707,6 +729,46 @@ async function setPaused(p) {
 }
 $('pauseBtn').onclick = () => setPaused(true);
 
+/* ---------- lists ---------- */
+let HOME_LIST = '', LISTS = [];
+function fillListSelect(sel, lists, allLabel, cur) {
+  lists = (lists || []).filter(l => l.total > 0);
+  sel.innerHTML = '<option value="">' + allLabel + '</option>' + lists.map(l => '<option value="' + l.id + '">' + esc(l.name) + (l.active ? '' : ' (paused)') + '</option>').join('');
+  sel.value = cur && lists.some(l => String(l.id) === String(cur)) ? String(cur) : '';
+}
+$('homeList').onchange = () => { HOME_LIST = $('homeList').value; loadHome(); };
+async function loadLists() {
+  let d;
+  try { d = await api('/api/lists'); } catch (e) { $('listsList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  LISTS = d.lists.filter(l => l.total > 0);   // an import that added nothing new leaves an empty list; hide it
+  fillListSelect($('llist'), LISTS, 'All lists', $('llist').value);
+  $('listsLimit').textContent = d.limit + ' a day in total';
+  $('listsList').innerHTML = LISTS.length ? LISTS.map(l =>
+    '<div class="item lrow"><div class="t"><b>' + esc(l.name) + (l.active ? '' : ' <span class="tag grey">Paused</span>') + '</b>' +
+    '<small>' + l.fresh.toLocaleString() + ' to email · ' + l.sent_ever.toLocaleString() + ' emailed · ' + l.replies + ' repl' + (l.replies === 1 ? 'y' : 'ies') + '</small>' +
+    '<small>' + (l.active ? 'Today: ' + l.sent_today + ' sent, share ' + l.share + (l.want === 0 ? ' (nothing left to send)' : '') : 'Paused: no new drafts or follow-ups') + '</small></div>' +
+    '<button type="button" class="ghost" data-ren="' + l.id + '" aria-label="Rename ' + esc(l.name) + '">Rename</button>' +
+    '<label class="switch" title="' + (l.active ? 'Pause this list' : 'Turn this list on') + '"><input type="checkbox" data-onoff="' + l.id + '"' + (l.active ? ' checked' : '') + ' aria-label="' + esc(l.name) + ' on or off"><span></span></label></div>').join('')
+    : '<div class="empty">No lists yet. Import a CSV file to create your first list.</div>';
+}
+$('listsList').addEventListener('change', async e => {
+  const c = e.target.closest('[data-onoff]'); if (!c) return;
+  c.disabled = true;
+  try { await api('/api/lists', { id: Number(c.dataset.onoff), active: c.checked }); toast(c.checked ? 'List turned on' : 'List paused'); SUMMARY = null; }
+  catch (err) { toast(err.message, true); }
+  loadLists();
+});
+$('listsList').addEventListener('click', e => {
+  const b = e.target.closest('[data-ren]'); if (!b) return;
+  const l = LISTS.find(x => String(x.id) === b.dataset.ren); if (!l) return;
+  openDialog('Rename list', '<label for="renName">List name</label><input type="text" id="renName" maxlength="80" value="' + esc(l.name) + '"><div class="row" style="margin-top:12px"><button type="button" id="renSave">Save</button></div><div id="renMsg"></div>');
+  $('renName').focus(); $('renName').select();
+  $('renSave').onclick = () => busy($('renSave'), async () => {
+    try { await api('/api/lists', { id: l.id, name: $('renName').value }); $('dlg').close(); toast('List renamed'); loadLists(); loadLeads(); }
+    catch (err) { msg($('renMsg'), err.message, 'err'); }
+  }, 'Saving…');
+});
+
 /* ---------- leads ---------- */
 function fillStatusFilter() {
   const sel = $('lstatus'); const cur = sel.value;
@@ -718,7 +780,7 @@ function fillStatusFilter() {
 async function loadLeads() {
   if (!SUMMARY) { try { SUMMARY = await api('/api/summary'); STATUS = SUMMARY.statuses; setPill(SUMMARY.gmail); } catch (e) {} }
   fillStatusFilter();
-  const qs = new URLSearchParams({ q: $('lq').value.trim(), status: $('lstatus').value, country: $('lcountry').value, page: leadPage });
+  const qs = new URLSearchParams({ q: $('lq').value.trim(), status: $('lstatus').value, country: $('lcountry').value, list: $('llist').value, page: leadPage });
   let d;
   try { d = await api('/api/leads?' + qs); } catch (e) { $('leadList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
   if (d.countries) {
@@ -745,7 +807,7 @@ function setImport(open) {
 $('importToggle').onclick = () => { setImport(true); $('csv').focus(); };
 $('importClose').onclick = () => setImport(false);
 $('lq').addEventListener('input', () => { clearTimeout(leadTimer); leadTimer = setTimeout(() => { leadPage = 1; loadLeads(); }, 350); });
-$('lstatus').onchange = $('lcountry').onchange = () => { leadPage = 1; loadLeads(); };
+$('lstatus').onchange = $('lcountry').onchange = $('llist').onchange = () => { leadPage = 1; loadLeads(); };
 $('prevPg').onclick = () => { leadPage--; loadLeads(); };
 $('nextPg').onclick = () => { leadPage++; loadLeads(); };
 $('leadList').addEventListener('click', e => { const it = e.target.closest('[data-lead]'); if (it) openLead(it.dataset.lead); });
@@ -848,6 +910,7 @@ const norm = h => String(h).toLowerCase().replace(/[_\-.]+/g, ' ').replace(/\s+/
 $('csv').onchange = () => {
   const f = $('csv').files[0]; PARSED = null; $('importBtn').disabled = true; $('mapInfo').textContent = ''; msg($('importMsg'), '');
   if (!f) return;
+  $('listName').value = f.name.replace(/\.(csv|txt)$/i, '').replace(/[_]+/g, ' ').slice(0, 80);
   if (f.size > 25 * 1024 * 1024) return msg($('importMsg'), 'This file is larger than 25 MB. Split it into smaller files.', 'err');
   const rd = new FileReader();
   rd.onerror = () => msg($('importMsg'), 'Could not read this file.', 'err');
@@ -886,19 +949,20 @@ $('importBtn').onclick = async () => {
   const btn = $('importBtn'); btn.disabled = true;
   const src = $('csv').files[0].name, ctry = $('ctry').value.trim();
   const bar = $('impBar'); bar.hidden = false; bar.firstElementChild.style.width = '0%';
-  let added = 0, dupes = 0, invalid = 0, i = 0;
+  let added = 0, dupes = 0, invalid = 0, i = 0, listId = 0;
   try {
     for (i = 0; i < PARSED.length; i += 100) {
       const last = i + 100 >= PARSED.length;
       const totals = last ? (added + '+ added') : '';
-      const r = await api('/api/import', { rows: PARSED.slice(i, i + 100), source: src, country: ctry, last, totals });
+      const r = await api('/api/import', { rows: PARSED.slice(i, i + 100), source: src, country: ctry, last, totals, list_id: listId || undefined, list_name: listId ? undefined : $('listName').value.trim() });
+      listId = r.list_id;
       added += r.added; dupes += r.dupes; invalid += r.invalid;
       bar.firstElementChild.style.width = Math.round(Math.min(i + 100, PARSED.length) / PARSED.length * 100) + '%';
       btn.textContent = 'Importing… ' + Math.min(i + 100, PARSED.length) + ' / ' + PARSED.length;
     }
     msg($('importMsg'), added + ' new lead' + (added === 1 ? '' : 's') + ' added. ' + dupes + ' skipped as duplicates or already in your list. ' + invalid + ' skipped with no valid email.', 'ok');
     $('csv').value = ''; PARSED = null; $('mapInfo').textContent = '';
-    SUMMARY = null; leadPage = 1; loadLeads();
+    SUMMARY = null; leadPage = 1; loadLists(); loadLeads();
   } catch (e) {
     msg($('importMsg'), 'Import stopped: ' + e.message + '. ' + added + ' were added before it stopped. Choose the file again and import: leads already added are skipped automatically.', 'err');
   }
