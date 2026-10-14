@@ -1,11 +1,11 @@
 // Shree Pharma: website + private email dashboard on one Cloudflare Worker.
 import loginPage from './ui/login.html';
 import appPage from './ui/app.html';
-import { ensureSchema, getSettings, setSettings, log, counter, bump, EDITABLE, DEFAULT_TEMPLATES } from './db.js';
+import { ensureSchema, getSettings, setSettings, log, counter, bump, EDITABLE, DEFAULT_TEMPLATES, getOrCreateList } from './db.js';
 import { Gmail, GmailAuthError, BudgetError, oauthStartUrl, exchangeCode, googleUrls, buildMime, textToHtml } from './gmail.js';
 import {
   STATUS, PENDING, HAS_DRAFT, MANUAL_STATUSES, effective, dailyLimit, createDrafts, sendQueued, checkReplies, syncDrafts,
-  closeLead, sendAlert, compose, runCron, sentTodayKey
+  closeLead, sendAlert, compose, runCron, sentTodayKey, listPlan
 } from './engine.js';
 import { pushAll, vapidKeys, validSubscription, SERVICE_WORKER, MAX_DEVICES } from './push.js';
 import {
@@ -221,6 +221,8 @@ async function api(request, env, url, p, m) {
         if (!r.sent) throw bad('The notification could not be delivered. Turn notifications off and on again on this device.');
         return json(r);
       }
+      case 'GET /api/lists': return json(await listsView(env, s));
+      case 'POST /api/lists': return json(await updateList(env, body));
       case 'GET /api/quotes': return json(await listQuotes(env, url, s));
       case 'POST /api/quotes': return json(await createQuote(env, s, body));
       case 'GET /api/log': {
@@ -248,14 +250,19 @@ async function summary(env, s, url) {
     await setSettings(env, { app_origin: o });
     s = effective({ ...s, app_origin: o });
   }
-  const [counts, ready, replies, enq, logRows, sentToday] = await Promise.all([
-    env.DB.prepare('SELECT status, COUNT(*) AS n FROM leads GROUP BY status').all(),
-    env.DB.prepare(`SELECT id, email, first_name, company, country, status, draft_subject FROM leads WHERE status IN ('drafted','fu_drafted') ORDER BY status DESC, id LIMIT 300`).all(),
-    env.DB.prepare(`SELECT id, email, company, country, status, thread_id, replied_at, reply_snippet FROM leads WHERE replied_at IS NOT NULL ORDER BY replied_at DESC LIMIT 15`).all(),
+  const listId = parseInt(url.searchParams.get('list'), 10) || 0;
+  const lw = listId ? ' AND list_id = ' + listId : '';     // listId is an integer, safe to inline
+  const [counts, ready, replies, enq, logRows, sentAll, plan] = await Promise.all([
+    env.DB.prepare('SELECT status, COUNT(*) AS n FROM leads WHERE 1=1' + lw + ' GROUP BY status').all(),
+    env.DB.prepare(`SELECT id, email, first_name, company, country, status, draft_subject, list_id FROM leads WHERE status IN ('drafted','fu_drafted')` + lw + ` ORDER BY status DESC, id LIMIT 300`).all(),
+    env.DB.prepare(`SELECT id, email, company, country, status, thread_id, replied_at, reply_snippet FROM leads WHERE replied_at IS NOT NULL` + lw + ` ORDER BY replied_at DESC LIMIT 15`).all(),
     env.DB.prepare(`SELECT COUNT(*) AS n FROM enquiries WHERE status = 'new'`).first(),
     env.DB.prepare('SELECT at, action, email, detail FROM log ORDER BY id DESC LIMIT 12').all(),
-    counter(env, sentTodayKey())
+    counter(env, sentTodayKey()),
+    listPlan(env, s)
   ]);
+  const one = listId ? plan.lists.find(l => l.id === listId) : null;
+  const sentToday = one ? one.sent_today : sentAll;
   const byStatus = {};
   for (const r of counts.results) byStatus[r.status] = Number(r.n);
   const queued = (byStatus.queued || 0) + (byStatus.fu_queued || 0) + (byStatus.sending || 0) + (byStatus.fu_sending || 0);
@@ -267,7 +274,9 @@ async function summary(env, s, url) {
     byStatus,
     total: Object.values(byStatus).reduce((a, b) => a + b, 0),
     sentToday,
-    limit: dailyLimit(s),
+    limit: one ? one.share : dailyLimit(s),
+    lists: plan.lists.map(l => ({ id: l.id, name: l.name, active: l.active, total: l.total, fresh: l.fresh, share: l.share, sent_today: l.sent_today })),
+    list: listId,
     queued,
     paused: isYes(s.paused),
     gmail: { email: s.gmail_email || '', problem: s.gmail_status || '', connected: !!(s.gmail_refresh && s.gmail_email) },
@@ -291,6 +300,8 @@ async function listLeads(env, url) {
     else { where.push('status = ?'); args.push(status); }
   }
   if (country) { where.push('country = ?'); args.push(country); }
+  const list = parseInt(url.searchParams.get('list'), 10) || 0;
+  if (list) { where.push('list_id = ?'); args.push(list); }
   const w = where.length ? ' WHERE ' + where.join(' AND ') : '';
   const per = 50;
   const [rows, total] = await Promise.all([
@@ -347,6 +358,17 @@ async function importLeads(env, b) {
   const source = clip(b.source || 'CSV', 120);
   const defCountry = clip(b.country, 80);
   const now = Date.now();
+  let listId = parseInt(b.list_id, 10) || 0;
+  if (listId) {
+    if (!(await env.DB.prepare('SELECT id FROM lists WHERE id = ?').bind(listId).first())) throw bad('That list no longer exists. Choose the file again.');
+  } else {
+    let name = clip(b.list_name || source.replace(/\.(csv|txt)$/i, ''), 80) || 'Imported leads';
+    // a new import always gets a new list, even if the name was used before
+    if (await env.DB.prepare('SELECT id FROM lists WHERE name = ?').bind(name).first()) name = (name + ' (' + new Date(now + 5.5 * 3600000).toISOString().slice(0, 10) + ')').slice(0, 80);
+    if (await env.DB.prepare('SELECT id FROM lists WHERE name = ?').bind(name).first()) name = (name.slice(0, 70) + ' #' + randomHex(2));
+    const r = await env.DB.prepare('INSERT INTO lists(name, active, created_at) VALUES(?, 1, ?)').bind(name, now).run();
+    listId = r.meta.last_row_id;
+  }
   const stmts = [];
   let invalid = 0;
   const seen = new Set();
@@ -356,10 +378,10 @@ async function importLeads(env, b) {
     if (seen.has(email)) continue;
     seen.add(email);
     stmts.push(env.DB.prepare(
-      `INSERT OR IGNORE INTO leads(email, first_name, company, country, business_type, phone, website, source, status, unsub_token, created_at, updated_at)
-       VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?)`
+      `INSERT OR IGNORE INTO leads(email, first_name, company, country, business_type, phone, website, source, status, unsub_token, created_at, updated_at, list_id)
+       VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?)`
     ).bind(email, firstName(r.firstName || r.name || ''), clip(r.company, 200), clip(r.country || defCountry, 80), clip(r.type, 120),
-      clip(r.phone, 60), clip(r.website, 200), source, randomHex(16), now, now));
+      clip(r.phone, 60), clip(r.website, 200), source, randomHex(16), now, now, listId));
   }
   let added = 0;
   if (stmts.length) {
@@ -368,7 +390,31 @@ async function importLeads(env, b) {
   }
   const dupes = rows.length - invalid - added;
   if (b.last) await log(env, 'Import', '', source + (b.totals ? ': ' + b.totals : ''));
-  return { added, dupes, invalid };
+  return { added, dupes, invalid, list_id: listId };
+}
+
+async function listsView(env, s) {
+  const plan = await listPlan(env, s);
+  return { limit: plan.limit, lists: plan.lists };
+}
+async function updateList(env, b) {
+  const id = parseInt(b.id, 10) || 0;
+  const row = await env.DB.prepare('SELECT * FROM lists WHERE id = ?').bind(id).first();
+  if (!row) throw bad('List not found.');
+  if (typeof b.name === 'string') {
+    const name = clip(b.name, 80);
+    if (name.length < 1) throw bad('Give the list a name.');
+    const clash = await env.DB.prepare('SELECT id FROM lists WHERE name = ? AND id <> ?').bind(name, id).first();
+    if (clash) throw bad('Another list already has that name.');
+    await env.DB.prepare('UPDATE lists SET name = ? WHERE id = ?').bind(name, id).run();
+    await log(env, 'List renamed', '', row.name + ' → ' + name);
+  }
+  if ('active' in b) {
+    const on = b.active ? 1 : 0;
+    await env.DB.prepare('UPDATE lists SET active = ? WHERE id = ?').bind(on, id).run();
+    await log(env, on ? 'List turned on' : 'List paused', '', row.name);
+  }
+  return { ok: true };
 }
 
 async function apiDrafts(env, s, gm) {
@@ -377,6 +423,8 @@ async function apiDrafts(env, s, gm) {
   if (r.created) return { ...r, message: r.created + ' draft(s) created in Gmail' + (r.followups ? ', including ' + r.followups + ' follow-up(s)' : '') + '.' };
   const fresh = await env.DB.prepare(`SELECT COUNT(*) AS n FROM leads WHERE status = 'new'`).first();
   if (!fresh || !Number(fresh.n)) return { ...r, message: 'No new leads left to email. Import more leads.' };
+  const freshOn = await env.DB.prepare(`SELECT COUNT(*) AS n FROM leads d JOIN lists l ON l.id = d.list_id WHERE d.status = 'new' AND l.active = 1`).first();
+  if (!freshOn || !Number(freshOn.n)) return { ...r, message: 'All lists with leads left are paused. Turn a list on in Leads > Lists.' };
   return { ...r, message: 'Today\'s limit is already covered by drafts waiting or emails sent. Approve or skip the waiting drafts, or raise the daily limit in Settings.' };
 }
 
@@ -659,9 +707,10 @@ async function publicEnquiry(request, env, ctx) {
   const gm = connected ? new Gmail(env, s, 6) : null;
   const lead = await env.DB.prepare('SELECT * FROM leads WHERE email = ?').bind(e.email).first();
   if (!lead) {
-    await env.DB.prepare(`INSERT OR IGNORE INTO leads(email, first_name, company, country, phone, source, status, unsub_token, notes, created_at, updated_at)
-      VALUES(?, ?, ?, ?, ?, 'Website form', 'enquiry', ?, 'Website enquiry', ?, ?)`)
-      .bind(e.email, firstName(e.name), e.company, e.country, e.phone, randomHex(16), now, now).run();
+    const webList = await getOrCreateList(env, 'Website enquiries');
+    await env.DB.prepare(`INSERT OR IGNORE INTO leads(email, first_name, company, country, phone, source, status, unsub_token, notes, created_at, updated_at, list_id)
+      VALUES(?, ?, ?, ?, ?, 'Website form', 'enquiry', ?, 'Website enquiry', ?, ?, ?)`)
+      .bind(e.email, firstName(e.name), e.company, e.country, e.phone, randomHex(16), now, now, webList).run();
   } else if (['new', 'drafted', 'queued', 'skipped'].indexOf(lead.status) >= 0) {
     try { await closeLead(env, gm, lead, 'enquiry', { note: 'Website enquiry' }); } catch (x) { console.error(x); }
   } else {

@@ -90,6 +90,49 @@ export async function pendingCount(env) {
 }
 export const sentTodayKey = () => 'sent:' + istDay();
 
+// Start of today in India, as a timestamp.
+export function istDayStart() { const d = istDay(); return Date.parse(d + 'T00:00:00+05:30'); }
+
+// Splits the total daily limit evenly across active lists that still have work.
+// A list that cannot use its full share (few leads left) passes the rest to the others.
+export async function listPlan(env, s) {
+  const limit = dailyLimit(s), now = Date.now(), dayStart = istDayStart();
+  const { results } = await env.DB.prepare(`
+    SELECT l.id, l.name, l.active, l.created_at,
+      COUNT(d.id) AS total,
+      SUM(CASE WHEN d.status = 'new' THEN 1 ELSE 0 END) AS fresh,
+      SUM(CASE WHEN d.status = 'sent' AND d.followup_due IS NOT NULL AND d.followup_due <= ? THEN 1 ELSE 0 END) AS fu_due,
+      SUM(CASE WHEN d.status IN (${ph(PENDING.length)}) THEN 1 ELSE 0 END) AS pending,
+      SUM(CASE WHEN (d.sent_at >= ?) OR (d.followup_sent_at >= ?) THEN 1 ELSE 0 END) AS sent_today,
+      SUM(CASE WHEN d.sent_at IS NOT NULL THEN 1 ELSE 0 END) AS sent_ever,
+      SUM(CASE WHEN d.status IN ('replied','interested','client','not_interested') THEN 1 ELSE 0 END) AS replies
+    FROM lists l LEFT JOIN leads d ON d.list_id = l.id
+    GROUP BY l.id ORDER BY l.id`).bind(now, ...PENDING, dayStart, dayStart).all();
+  const lists = results.map(r => {
+    const o = { id: r.id, name: r.name, active: !!r.active, created_at: r.created_at };
+    for (const k of ['total', 'fresh', 'fu_due', 'pending', 'sent_today', 'sent_ever', 'replies']) o[k] = Number(r[k] || 0);
+    o.used = o.pending + o.sent_today;
+    o.want = o.used + o.fresh + o.fu_due;          // the most this list could use today
+    o.share = 0;
+    return o;
+  });
+  // water-filling: equal split among lists that can still use more
+  let pool = limit, open = lists.filter(l => l.active && l.want > 0);
+  while (pool > 0 && open.length) {
+    const each = Math.floor(pool / open.length), extra = pool % open.length;
+    let given = 0;
+    open.forEach((l, i) => {
+      const offer = each + (i < extra ? 1 : 0);
+      const take = Math.min(offer, l.want - l.share);
+      l.share += take; given += take;
+    });
+    pool -= given;
+    if (!given) break;
+    open = open.filter(l => l.share < l.want);
+  }
+  return { limit, lists };
+}
+
 /* ---------- drafts ---------- */
 
 async function revert(env, ids, status) {
@@ -105,19 +148,33 @@ export async function createDrafts(env, gm, s, max) {
   const limit = dailyLimit(s);
   let room = Math.min(max, limit - (await pendingCount(env)) - (await counter(env, sentTodayKey())), Math.max(0, gm.budget - 2));
   if (room <= 0) return result;
+  const plan = await listPlan(env, s);
+  // each list may draft up to its share of today's limit, minus what it already used
+  const rooms = plan.lists.filter(l => l.active).map(l => ({ id: l.id, room: Math.max(0, l.share - l.used) })).filter(x => x.room > 0);
+  for (const lr of rooms) {
+    if (room <= 0 || gm.budget < 3) break;
+    let listRoom = Math.min(lr.room, room);
+    const before = result.created;
+    await draftList(env, gm, s, lr.id, listRoom, result);
+    room -= result.created - before;
+  }
+  if (result.created) await log(env, 'Drafts created', '', result.created + ' draft(s), ' + result.followups + ' follow-up(s)');
+  return result;
+}
 
+async function draftList(env, gm, s, listId, room, result) {
   for (const kind of ['fu', 'first']) {
    for (let round = 0; round < 5 && room > 0 && gm.budget >= 3; round++) {
     const now = Date.now();
     const claimed = kind === 'fu'
       ? (await env.DB.prepare(
           `UPDATE leads SET status = 'fu_drafting', updated_at = ? WHERE id IN (
-             SELECT id FROM leads WHERE status = 'sent' AND followup_due IS NOT NULL AND followup_due <= ? ORDER BY followup_due LIMIT ?)
-           RETURNING *`).bind(now, now, room).all()).results
+             SELECT id FROM leads WHERE list_id = ? AND status = 'sent' AND followup_due IS NOT NULL AND followup_due <= ? ORDER BY followup_due LIMIT ?)
+           RETURNING *`).bind(now, listId, now, room).all()).results
       : (await env.DB.prepare(
           `UPDATE leads SET status = 'drafting', updated_at = ? WHERE id IN (
-             SELECT id FROM leads WHERE status = 'new' ORDER BY id LIMIT ?)
-           RETURNING *`).bind(now, room).all()).results;
+             SELECT id FROM leads WHERE list_id = ? AND status = 'new' ORDER BY id LIMIT ?)
+           RETURNING *`).bind(now, listId, room).all()).results;
     if (!claimed.length) break;
     const back = kind === 'fu' ? 'sent' : 'new';
     for (let i = 0; i < claimed.length; i++) {
@@ -167,7 +224,6 @@ export async function createDrafts(env, gm, s, max) {
     }
   }
   }
-  if (result.created) await log(env, 'Drafts created', '', result.created + ' draft(s), ' + result.followups + ' follow-up(s)');
   return result;
 }
 

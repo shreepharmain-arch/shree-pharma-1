@@ -46,6 +46,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS counters (key TEXT PRIMARY KEY, n INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS seen (id TEXT PRIMARY KEY, at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS push_subs (endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL, label TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, last_ok INTEGER)`,
+  `CREATE TABLE IF NOT EXISTS lists (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, number TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, company TEXT NOT NULL DEFAULT '', contact TEXT NOT NULL DEFAULT '', email TEXT NOT NULL DEFAULT '', country TEXT NOT NULL DEFAULT '', currency TEXT NOT NULL, qty INTEGER NOT NULL, unit_price TEXT NOT NULL, total TEXT NOT NULL, payment_terms TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '', data TEXT NOT NULL DEFAULT '{}')`
 ];
 
@@ -54,7 +55,45 @@ export async function ensureSchema(env) {
   if (schemaReady) return;
   if (!env.DB) throw new Error('The database is not connected. Check the D1 binding named DB.');
   await env.DB.batch(SCHEMA.map(s => env.DB.prepare(s)));
+  await migrateLists(env);
   schemaReady = true;
+}
+
+// Lead lists: every import becomes its own list. Older leads (before lists existed) are split by country.
+const niceCountry = c => String(c || '').replace(/^the\s+/i, '').trim();
+export async function getOrCreateList(env, name) {
+  name = String(name || '').trim().slice(0, 80) || 'Imported leads';
+  const found = await env.DB.prepare('SELECT id FROM lists WHERE name = ?').bind(name).first();
+  if (found) return found.id;
+  const r = await env.DB.prepare('INSERT INTO lists(name, active, created_at) VALUES(?, 1, ?)').bind(name, Date.now()).run();
+  return r.meta.last_row_id;
+}
+async function migrateLists(env) {
+  const cols = (await env.DB.prepare('PRAGMA table_info(leads)').all()).results.map(c => c.name);
+  if (cols.indexOf('list_id') < 0) {
+    await env.DB.prepare('ALTER TABLE leads ADD COLUMN list_id INTEGER').run();
+  }
+  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_leads_list ON leads(list_id, status)').run();
+  const left = await env.DB.prepare('SELECT COUNT(*) AS n FROM leads WHERE list_id IS NULL').first();
+  if (!left || !Number(left.n)) return;
+  // website quote requests get their own list
+  const web = await env.DB.prepare(`SELECT COUNT(*) AS n FROM leads WHERE list_id IS NULL AND source = 'Website form'`).first();
+  if (web && Number(web.n)) {
+    const id = await getOrCreateList(env, 'Website enquiries');
+    await env.DB.prepare(`UPDATE leads SET list_id = ? WHERE list_id IS NULL AND source = 'Website form'`).bind(id).run();
+  }
+  const { results } = await env.DB.prepare('SELECT country, COUNT(*) AS n FROM leads WHERE list_id IS NULL GROUP BY country ORDER BY n DESC').all();
+  for (const r of results) {
+    const c = niceCountry(r.country);
+    const id = await getOrCreateList(env, c ? c + ' leads' : 'Other leads');
+    await env.DB.prepare('UPDATE leads SET list_id = ? WHERE list_id IS NULL AND country = ?').bind(id, r.country).run();
+  }
+  // anything left (e.g. country NULL)
+  const other = await env.DB.prepare('SELECT COUNT(*) AS n FROM leads WHERE list_id IS NULL').first();
+  if (other && Number(other.n)) {
+    const id = await getOrCreateList(env, 'Other leads');
+    await env.DB.prepare('UPDATE leads SET list_id = ? WHERE list_id IS NULL').bind(id).run();
+  }
 }
 
 export const DEFAULT_TEMPLATES = {
