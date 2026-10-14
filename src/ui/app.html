@@ -113,7 +113,7 @@ button svg,.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-
 .alert.warn{background:var(--warnbg);color:var(--warn);font-weight:500}
 .alert .row{margin-top:8px}
 label{font-weight:600;font-size:13.5px;display:block;margin:14px 0 6px}
-input[type=text],input[type=email],input[type=number],input[type=search],input[type=url],input[type=file],select,textarea{width:100%;padding:10px 12px;border:1px solid #b6bfcb;border-radius:9px;font:inherit;font-size:16px;background:#fff;color:var(--ink);min-width:0;min-height:44px}
+input[type=text],input[type=email],input[type=number],input[type=search],input[type=url],input[type=file],input[type=date],select,textarea{width:100%;padding:10px 12px;border:1px solid #b6bfcb;border-radius:9px;font:inherit;font-size:16px;background:#fff;color:var(--ink);min-width:0;min-height:44px}
 textarea{min-height:240px;resize:vertical;font-size:14.5px;line-height:1.55}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(19,33,58,.14)}
 .help{font-size:13px;color:var(--mute);margin-top:5px}
@@ -152,6 +152,25 @@ dialog::backdrop{background:rgba(19,33,58,.45)}
 .toast{position:fixed;left:50%;bottom:calc(18px + var(--navh) + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.err{background:var(--err)}
 
+.opt{font-weight:400;color:var(--mute);font-size:12.5px;margin-left:3px}
+.qgrid{display:grid;grid-template-columns:110px 1fr 1fr;gap:0 12px}
+.qtotal{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:10px}
+.qtotal b{font-size:20px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.qresult{text-align:center;padding:18px 4px 6px}
+.qresult:focus{outline:none}
+.qresult .okic{width:46px;height:46px;fill:none;stroke:var(--ok);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.qresult h2{margin:8px 0 4px;font-size:18px}
+.qh{font-size:14px;color:var(--mute);font-weight:600;margin:18px 0 0;padding-top:12px;border-top:1px solid var(--rule)}
+form#quoteForm > .qh:first-child{border-top:0;padding-top:0;margin-top:8px}
+.picklist{border:1px solid var(--rule);border-radius:10px;margin-top:6px;max-height:320px;overflow:auto;background:#fff}
+.pick{display:block;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--rule);border-radius:0;color:var(--ink);padding:10px 12px;min-height:48px}
+.pick:last-child{border-bottom:0}
+.pick:hover{background:var(--bg);border-color:var(--rule)}
+.pick b{display:block;font-size:14.5px}
+.pick small{display:block;color:var(--mute);font-weight:400;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.qsect{margin-top:12px;box-shadow:none}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:14px;margin:16px 0 4px;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--magenta);flex:none;margin-top:1px}
 @media (max-width:719px){
   :root{--navh:calc(62px + env(safe-area-inset-bottom))}
   nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--rule);padding:4px 6px env(safe-area-inset-bottom);gap:0;box-shadow:0 -4px 16px rgba(19,33,58,.05)}
@@ -163,6 +182,9 @@ dialog::backdrop{background:rgba(19,33,58,.45)}
   .stat:nth-child(3){border-left:0}
   .stat:nth-child(n+3){border-top:1px solid var(--rule)}
   .grid2,.filters{grid-template-columns:1fr}
+  .qgrid{grid-template-columns:1fr 1fr}
+  .qgrid > div:first-child{grid-column:1/-1}
+  nav.tabs a{font-size:11px}
   dialog{width:100vw;max-width:100vw;margin:auto 0 0;border-radius:18px 18px 0 0;max-height:92vh}
   .dlg{padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
 }
@@ -180,6 +202,7 @@ dialog::backdrop{background:rgba(19,33,58,.45)}
       <a href="#home" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5Z"/></svg><span>Home</span></a>
       <a href="#leads" data-tab="leads"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.5"/><path d="M3 19.5c.6-3.3 3-5 6-5s5.4 1.7 6 5M16 5.5a3.2 3.2 0 0 1 0 6.2M18 14.8c1.7.6 2.7 2.2 3 4.7"/></svg><span>Leads</span></a>
       <a href="#enquiries" data-tab="enquiries" aria-label="Quote requests"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4Z"/><path d="M8 9.5h8M8 12.5h5"/></svg><span>Requests</span><span class="badge" id="enqBadge" hidden></span></a>
+      <a href="#quotes" data-tab="quotes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 6.5 20V4a.5.5 0 0 1 .5-.5Z"/><path d="M14 3.5V8h4M9.5 12.5h5M9.5 16h5"/></svg><span>Quotes</span></a>
       <a href="#settings" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg><span>Settings</span></a>
     </nav>
   </div>
@@ -281,6 +304,97 @@ dialog::backdrop{background:rgba(19,33,58,.45)}
     <p class="muted" style="margin:0">Reply to each buyer, then mark it Replied or Closed to keep this list tidy.</p>
     <div class="list" id="enqList"></div>
     <div class="pager"><button class="line" id="ePrev" type="button">Previous</button><span class="muted" id="ePg"></span><button class="line" id="eNext" type="button">Next</button></div>
+  </div>
+</section>
+
+<!-- QUOTES -->
+<section id="tab-quotes" data-panel="quotes" hidden>
+  <h1 class="sr-only">Quotations</h1>
+  <div class="card">
+    <h2>New quotation</h2>
+    <form id="quoteForm" novalidate>
+      <h3 class="qh">Buyer</h3>
+      <label for="qFind">Pick from your leads <span class="opt">optional</span></label>
+      <input type="search" id="qFind" placeholder="Search company, email or name" autocomplete="off">
+      <div id="qFindList" class="picklist" hidden></div>
+      <div class="grid2">
+        <div><label for="qCompany">Buyer company</label><input type="text" id="qCompany" autocomplete="off" required></div>
+        <div><label for="qContact">Contact person <span class="opt">optional</span></label><input type="text" id="qContact" autocomplete="off"></div>
+        <div><label for="qEmail">Buyer email <span class="opt">optional</span></label><input type="email" id="qEmail" autocomplete="off" inputmode="email"></div>
+        <div><label for="qCountry">Country <span class="opt">optional</span></label><input type="text" id="qCountry" autocomplete="off"></div>
+      </div>
+
+      <h3 class="qh">Price</h3>
+      <div class="qgrid">
+        <div><label for="qCur">Currency</label><select id="qCur"><option>USD</option><option>EUR</option><option>GBP</option><option>AED</option><option>INR</option></select></div>
+        <div><label for="qQty">Quantity</label><input type="text" id="qQty" inputmode="numeric" autocomplete="off" required></div>
+        <div><label for="qPrice">Rate per unit (<span id="qPriceCur">USD</span>)</label><input type="text" id="qPrice" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.85" required></div>
+      </div>
+      <div class="qtotal"><span>Total, shipping not included</span><b id="qTotal">–</b></div>
+      <div class="grid2">
+        <div><label for="qDate">Quotation date</label><input type="date" id="qDate" required></div>
+        <div><label for="qf_valid_until">Valid until <span class="opt">optional</span></label><input type="text" id="qf_valid_until" placeholder="e.g. 31 October 2026"></div>
+      </div>
+
+      <details class="sect qsect">
+        <summary><h2>Product</h2><span class="sum" id="qsProduct"></span></summary>
+        <div class="in">
+          <label for="qf_product">Product name</label><input type="text" id="qf_product">
+          <div class="grid2">
+            <div><label for="qf_unit">Unit</label><input type="text" id="qf_unit" placeholder="vials"></div>
+          </div>
+          <label for="qf_description">Description lines (one per line)</label><textarea id="qf_description" style="min-height:90px"></textarea>
+        </div>
+      </details>
+      <details class="sect qsect">
+        <summary><h2>Terms</h2><span class="sum" id="qsTerms"></span></summary>
+        <div class="in">
+          <label for="qf_payment_terms">Payment terms</label><textarea id="qf_payment_terms" style="min-height:60px"></textarea>
+          <label for="qf_shipping_note">Shipping notice (shown in the highlighted box)</label><textarea id="qf_shipping_note" style="min-height:70px"></textarea>
+          <label for="qf_terms">Other terms &amp; conditions (one per line)</label><textarea id="qf_terms" style="min-height:140px"></textarea>
+          <label for="qf_closing">Closing line</label><input type="text" id="qf_closing">
+        </div>
+      </details>
+      <details class="sect qsect">
+        <summary><h2>Your details on the quote</h2><span class="sum" id="qsSeller"></span></summary>
+        <div class="in">
+          <div class="grid2">
+            <div><label for="qf_s_company">Company name</label><input type="text" id="qf_s_company"></div>
+            <div><label for="qf_s_signatory">Signatory name</label><input type="text" id="qf_s_signatory"></div>
+          </div>
+          <label for="qf_s_tagline">Line under the company name</label><input type="text" id="qf_s_tagline">
+          <label for="qf_s_address">Address</label><input type="text" id="qf_s_address">
+          <div class="grid2">
+            <div><label for="qf_s_phone">Phone / WhatsApp</label><input type="text" id="qf_s_phone"></div>
+            <div><label for="qf_s_email">Email</label><input type="email" id="qf_s_email"></div>
+            <div><label for="qf_s_website">Website</label><input type="text" id="qf_s_website"></div>
+            <div><label for="qf_s_gstin">GSTIN <span class="opt">optional</span></label><input type="text" id="qf_s_gstin" autocomplete="off"></div>
+            <div><label for="qf_s_iec">IEC <span class="opt">optional</span></label><input type="text" id="qf_s_iec" autocomplete="off"></div>
+          </div>
+        </div>
+      </details>
+      <label class="chk"><input type="checkbox" id="qSaveDef"> Use this product, terms and my details as the default for next quotations</label>
+      <button type="button" class="ghost" id="qRestore" style="padding-left:0">Restore original wording</button>
+
+      <div class="row" style="margin-top:10px"><button type="submit" id="qMake" style="flex:1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Create and download PDF</button></div>
+      <div id="qMsg" role="status"></div>
+    </form>
+    <div id="qResult" class="qresult" tabindex="-1" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="okic"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.5 3 3 6-6.5"/></svg>
+      <h2 id="qResTitle"></h2>
+      <p class="muted" id="qResText" style="overflow-wrap:anywhere"></p>
+      <div class="row" style="justify-content:center">
+        <button type="button" id="qShare" hidden>Share PDF</button>
+        <button type="button" class="line" id="qDownload">Download again</button>
+        <button type="button" class="ghost" id="qEdit">Edit and make a new version</button>
+        <button type="button" class="ghost" id="qNew">New quotation</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Recent quotations</h2>
+    <div class="list" id="quoteList"></div>
+    <div class="pager" id="qPager" hidden><button class="line" id="qPrev" type="button">Previous</button><span class="muted" id="qPg"></span><button class="line" id="qNext" type="button">Next</button></div>
   </div>
 </section>
 
@@ -435,13 +549,14 @@ $('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').cl
 /* ---------- tabs ---------- */
 function showTab() {
   const tab = (location.hash || '#home').slice(1).split('?')[0];
-  const t = ['home', 'leads', 'enquiries', 'settings'].includes(tab) ? tab : 'home';
+  const t = ['home', 'leads', 'enquiries', 'quotes', 'settings'].includes(tab) ? tab : 'home';
   document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t);
   document.querySelectorAll('[data-tab]').forEach(a => { a.classList.toggle('on', a.dataset.tab === t); a.setAttribute('aria-current', a.dataset.tab === t ? 'page' : 'false'); });
   if (t === 'home') loadHome();
   if (t === 'leads') loadLeads();
   if (t === 'enquiries') loadEnquiries();
   if (t === 'settings') { loadSettings(); loadPush(); }
+  if (t === 'quotes') loadQuotes();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', showTab);
@@ -662,7 +777,8 @@ async function openLead(id) {
     '<div><label for="eCountry">Country</label><input type="text" id="eCountry" value="' + esc(lead.country) + '"></div>' +
     '<div><label for="eStatus">Status</label><select id="eStatus"' + (canChange ? '' : ' disabled') + '>' + opts.map(s => '<option value="' + s + '">' + esc(label(s)) + '</option>').join('') + '</select></div></div>' +
     '<label for="eNotes">Notes</label><textarea id="eNotes" style="min-height:90px">' + esc(lead.notes) + '</textarea>' +
-    '<div class="row" style="margin-top:12px"><button id="eSave">Save</button></div><div id="eMsg"></div>';
+    '<div class="row" style="margin-top:12px"><button id="eSave">Save</button><button type="button" class="line" id="eQuote">Make quote</button></div><div id="eMsg"></div>';
+  $('eQuote').onclick = () => makeQuoteFor({ company: lead.company || '', contact: [lead.first_name].filter(Boolean).join(' '), email: lead.email, country: lead.country || '' });
   $('eSave').onclick = () => busy($('eSave'), async () => {
     const body = { id: lead.id, first_name: $('eFirst').value, company: $('eCompany').value, country: $('eCountry').value, notes: $('eNotes').value };
     if (canChange && $('eStatus').value !== lead.status) body.status = $('eStatus').value;
@@ -795,6 +911,7 @@ async function loadEnquiries() {
   let d;
   try { d = await api('/api/enquiries?page=' + enqPage); } catch (e) { $('enqList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
   const waNum = p => String(p || '').replace(/[^\d]/g, '');
+  ENQ_ROWS = d.rows;
   $('enqList').innerHTML = d.rows.length ? d.rows.map(r =>
     '<div class="item"><div class="t"><b>' + esc(r.company || r.name) + ' <span class="' + (r.status === 'new' ? 'tag' : 'tag grey') + '">' + (r.status === 'new' ? 'New' : r.status === 'replied' ? 'Replied' : 'Closed') + '</span></b>' +
     '<small>' + esc(r.name) + ' · ' + esc(r.email) + (r.country ? ' · ' + esc(r.country) : '') + (r.quantity ? ' · ' + (/vial/i.test(r.quantity) ? '' : 'Qty ') + esc(r.quantity) : '') + '</small>' +
@@ -802,6 +919,7 @@ async function loadEnquiries() {
     (r.message ? '<small class="wrapline">' + esc(r.message) + '</small>' : '') +
     '<div class="row" style="margin-top:8px">' +
     '<a class="btn" href="mailto:' + esc(r.email) + '?subject=' + encodeURIComponent('Your quote request – Shree Pharma') + '">Reply by email</a>' +
+    '<button type="button" class="line" data-mkq="' + r.id + '">Make quote</button>' +
     (waNum(r.phone).length >= 8 ? '<a class="btn line" target="_blank" rel="noopener" href="https://wa.me/' + waNum(r.phone) + '">WhatsApp</a>' : '') +
     '<select data-enq="' + r.id + '" aria-label="Status" style="width:auto"><option value="new"' + (r.status === 'new' ? ' selected' : '') + '>New</option><option value="replied"' + (r.status === 'replied' ? ' selected' : '') + '>Replied</option><option value="closed"' + (r.status === 'closed' ? ' selected' : '') + '>Closed</option></select>' +
     '</div></div></div>').join('')
@@ -813,6 +931,12 @@ async function loadEnquiries() {
 $('enqList').addEventListener('change', async e => {
   const s = e.target.closest('[data-enq]'); if (!s) return;
   try { await api('/api/enquiry-status', { id: Number(s.dataset.enq), status: s.value }); toast('Updated'); loadEnquiries(); refreshBadge(); } catch (err) { toast(err.message, true); }
+});
+let ENQ_ROWS = [];
+$('enqList').addEventListener('click', e => {
+  const b = e.target.closest('[data-mkq]'); if (!b) return;
+  const r = ENQ_ROWS.find(x => String(x.id) === b.dataset.mkq); if (!r) return;
+  makeQuoteFor({ company: r.company || r.name, contact: r.name, email: r.email, country: r.country, quantity: r.quantity });
 });
 $('ePrev').onclick = () => { enqPage--; loadEnquiries(); };
 $('eNext').onclick = () => { enqPage++; loadEnquiries(); };
@@ -969,6 +1093,367 @@ $('pushTestBtn').onclick = () => busy($('pushTestBtn'), async () => {
   catch (e) { msg($('pushMsg'), e.message, 'err'); }
 }, 'Sending…');
 if (pushSupported() && Notification.permission === 'granted') navigator.serviceWorker.register('/app/sw.js', { scope: '/app' }).catch(() => {});
+
+/* ---------- PDF quotes ---------- */
+let QUOTES = null, QUOTE_PREFILL = null, LAST_QUOTE = null, quotePage = 1;
+const FONT_W = {"Helvetica":[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],"Helvetica-Bold":[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556]};
+const CP1252 = { 0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88, 0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C, 0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B, 0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F };
+function winAnsi(str) {
+  const out = [];
+  for (const ch of String(str == null ? '' : str).normalize('NFC')) {
+    const c = ch.codePointAt(0);
+    if (c === 9 || c === 10 || c === 13) out.push(32);
+    else if (c >= 32 && c < 127) out.push(c);
+    else if (c >= 160 && c <= 255) out.push(c);
+    else if (CP1252[c]) out.push(CP1252[c]);
+    else out.push(63); // characters the standard PDF font cannot show become "?"
+  }
+  return out;
+}
+function textWidth(str, size, bold) {
+  const w = FONT_W[bold ? 'Helvetica-Bold' : 'Helvetica'];
+  return winAnsi(str).reduce((s, b) => s + (w[b - 32] || 556), 0) * size / 1000;
+}
+function pdfStr(str) {
+  return '(' + winAnsi(str).map(b => b === 40 || b === 41 || b === 92 ? '\\' + String.fromCharCode(b) : b > 126 ? '\\' + b.toString(8).padStart(3, '0') : String.fromCharCode(b)).join('') + ')';
+}
+function wrapText(str, maxW, size, bold) {
+  const lines = [];
+  String(str || '').split(/\r?\n/).forEach(par => {
+    let line = '';
+    par.split(/\s+/).filter(Boolean).forEach(word => {
+      const test = line ? line + ' ' + word : word;
+      if (textWidth(test, size, bold) <= maxW) { line = test; return; }
+      if (line) lines.push(line);
+      while (textWidth(word, size, bold) > maxW) { // very long word: hard break
+        let i = word.length; while (i > 1 && textWidth(word.slice(0, i), size, bold) > maxW) i--;
+        lines.push(word.slice(0, i)); word = word.slice(i);
+      }
+      line = word;
+    });
+    lines.push(line);
+  });
+  return lines;
+}
+function money(v) { const [w, f] = String(v).split('.'); return w.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (f ? '.' + f : ''); }
+function qtyFmt(n) { return money(String(n)); }
+function quoteDate(t) { return new Date(Number(t)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' }); }
+
+const CUR_WORDS = { USD: ['US Dollars', 'Cents'], EUR: ['Euros', 'Cents'], GBP: ['Pounds Sterling', 'Pence'], AED: ['UAE Dirhams', 'Fils'], INR: ['Indian Rupees', 'Paise'] };
+function numWords(n, indian) {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  const two = x => x < 20 ? ones[x] : tens[Math.floor(x / 10)] + (x % 10 ? '-' + ones[x % 10] : '');
+  const three = x => (x >= 100 ? ones[Math.floor(x / 100)] + ' Hundred' + (x % 100 ? ' ' : '') : '') + (x % 100 ? two(x % 100) : '');
+  if (n === 0n) return 'Zero';
+  const parts = [];
+  if (indian) {
+    let rest = n;
+    const crore = rest / 10000000n; rest %= 10000000n;
+    if (crore) parts.push(numWords(crore, true) + ' Crore');
+    for (const [v, w] of [[100000n, 'Lakh'], [1000n, 'Thousand']]) { const k = rest / v; rest %= v; if (k) parts.push(two(Number(k)) + ' ' + w); }
+    if (rest) parts.push(three(Number(rest)));
+  } else {
+    const scales = ['', ' Thousand', ' Million', ' Billion', ' Trillion'];
+    let i = 0, rest = n;
+    while (rest > 0n) { const c = Number(rest % 1000n); if (c) parts.unshift(three(c) + scales[i]); rest /= 1000n; i++; }
+  }
+  return parts.join(' ');
+}
+function amountInWords(total, cur) {
+  const [w, f] = String(total).split('.');
+  const names = CUR_WORDS[cur] || [cur, 'Cents'];
+  const sub = parseInt((f || '0').padEnd(2, '0').slice(0, 2), 10);
+  return names[0] + ' ' + numWords(BigInt(w), cur === 'INR') + (sub ? ' and ' + numWords(BigInt(sub), false) + ' ' + names[1] : '') + ' Only';
+}
+const lines = s => String(s || '').split(/\n/).map(x => x.trim()).filter(Boolean);
+
+function buildQuotePdf(q) {
+  const d = q.data || {};
+  const W = 595.28, H = 841.89, L = 36, R = W - 36, T = H - 36, B = 36;
+  const BLACK = '0 0 0', DARK = '0.15 0.15 0.15', GREY = '0.38 0.38 0.38', LINE = '0.55 0.55 0.55', FILL = '0.93 0.93 0.93';
+  const pages = [];
+  let ops;
+  const text = (x, y, s, size, bold, color, align) => {
+    if (s == null || s === '') return;
+    let tx = x; if (align === 'right') tx = x - textWidth(s, size, bold); else if (align === 'center') tx = x - textWidth(s, size, bold) / 2;
+    ops.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + (color || BLACK) + ' rg ' + tx.toFixed(2) + ' ' + y.toFixed(2) + ' Td ' + pdfStr(s) + ' Tj ET');
+  };
+  const box = (x, y, w, h, stroke, fill, lw) => ops.push((fill ? fill + ' rg ' : '') + (stroke || LINE) + ' RG ' + (lw || 0.6) + ' w ' + [x, y, w, h].map(n => n.toFixed(2)).join(' ') + ' re ' + (fill ? 'B' : 'S'));
+  const line = (x1, y1, x2, y2, color, lw) => ops.push((color || LINE) + ' RG ' + (lw || 0.6) + ' w ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' m ' + x2.toFixed(2) + ' ' + y2.toFixed(2) + ' l S');
+  const newPage = () => { ops = []; pages.push(ops); box(L, B, R - L, T - B, BLACK, null, 1); };
+  const cur = q.currency, unit = d.unit || 'vials';
+  const company = d.s_company || 'Shree Pharma';
+
+  newPage();
+  // letterhead
+  let y = T - 30;
+  text(L + 14, y, company.toUpperCase(), 17, true, BLACK);
+  text(R - 14, y, 'QUOTATION', 17, true, BLACK, 'right');
+  y -= 15;
+  wrapText(d.s_tagline, R - L - 160, 9).forEach(s => { text(L + 14, y, s, 9, false, GREY); y -= 12; });
+  y -= 1;
+  const head = [];
+  if (d.s_address) head.push(...wrapText(d.s_address, 330, 8.5));
+  const contact = [d.s_phone ? 'Tel / WhatsApp: ' + d.s_phone : '', d.s_email ? 'Email: ' + d.s_email : ''].filter(Boolean).join('   ');
+  if (contact) head.push(contact);
+  if (d.s_website) head.push('Web: ' + d.s_website);
+  const reg = [d.s_gstin ? 'GSTIN: ' + d.s_gstin : '', d.s_iec ? 'IEC: ' + d.s_iec : ''].filter(Boolean).join('   ');
+  if (reg) head.push(reg);
+  head.forEach(s => { text(L + 14, y, s, 8.5, false, DARK); y -= 11.5; });
+  y -= 6;
+  line(L, y, R, y, BLACK, 1);
+
+  // buyer | quotation details
+  const mid = L + (R - L) * 0.56;
+  const boxTop = y;
+  let by = y - 16;
+  text(L + 10, by, 'Quotation to', 8.5, true, GREY); by -= 15;
+  wrapText(q.company, mid - L - 20, 11, true).forEach(s => { text(L + 10, by, s, 11, true); by -= 14; });
+  [q.contact ? 'Attn: ' + q.contact : '', q.email ? 'Email: ' + q.email : '', q.country ? 'Country: ' + q.country : ''].filter(Boolean)
+    .forEach(s => wrapText(s, mid - L - 20, 9).forEach(l => { text(L + 10, by, l, 9, false, DARK); by -= 12.5; }));
+  const pay = /100\s*%\s*advance/i.test(d.payment_terms || '') ? '100% advance' : 'As per terms below';
+  const meta = [['Quotation No.', q.number, true], ['Date', quoteDate(q.created_at)], d.valid_until ? ['Valid until', d.valid_until] : null, ['Currency', cur], ['Shipping', 'Not included (see note)', true], ['Payment', pay]].filter(Boolean);
+  let my = y - 16;
+  meta.forEach(([k, v, bold]) => { text(mid + 10, my, k, 8.5, false, GREY); text(mid + 88, my, ':', 8.5, false, GREY); text(mid + 96, my, v, 9, !!bold, BLACK); my -= 14; });
+  y = Math.min(by, my) - 6;
+  line(mid, boxTop, mid, y, LINE, 0.6);
+  line(L, y, R, y, BLACK, 1);
+
+  // item table
+  const cols = [L, L + 32, L + 268, L + 330, L + 405, R];
+  const th = 20;
+  box(L, y - th, R - L, th, BLACK, FILL, 0.6);
+  const hy = y - 13.5;
+  const unitLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
+  text((cols[0] + cols[1]) / 2, hy, 'S. No.', 8.5, true, BLACK, 'center');
+  text(cols[1] + 8, hy, 'Description of goods', 8.5, true);
+  text(cols[3] - 8, hy, 'Qty (' + unit + ')', 8.5, true, BLACK, 'right');
+  text(cols[4] - 8, hy, 'Rate (' + cur + ')', 8.5, true, BLACK, 'right');
+  text(cols[5] - 8, hy, 'Amount (' + cur + ')', 8.5, true, BLACK, 'right');
+  y -= th;
+  const rowTop = y;
+  let ry = y - 15;
+  text((cols[0] + cols[1]) / 2, ry, '1', 9.5, false, BLACK, 'center');
+  text(cols[3] - 8, ry, qtyFmt(q.qty), 9.5, false, BLACK, 'right');
+  text(cols[4] - 8, ry, money(q.unit_price), 9.5, false, BLACK, 'right');
+  text(cols[5] - 8, ry, money(q.total), 9.5, false, BLACK, 'right');
+  wrapText(d.product, cols[2] - cols[1] - 14, 9.5, true).forEach(s => { text(cols[1] + 8, ry, s, 9.5, true); ry -= 12; });
+  ry -= 1;
+  lines(d.description).forEach(s => wrapText(s, cols[2] - cols[1] - 14, 8).forEach(l => { text(cols[1] + 8, ry, l, 8, false, GREY); ry -= 10.5; }));
+  ry -= 22;
+  y = ry;
+  for (let i = 1; i < cols.length - 1; i++) line(cols[i], rowTop, cols[i], y, LINE, 0.6);
+  line(L, y, R, y, BLACK, 0.6);
+
+  // totals + amount in words
+  const tl = cols[2];
+  const trow = (label, value, bold, fill) => {
+    if (fill) box(tl, y - 18, R - tl, 18, BLACK, fill, 0.6); else line(tl, y - 18, R, y - 18, LINE, 0.6);
+    text(cols[4] - 8, y - 12.5, label, 8.5, bold, BLACK, 'right');
+    text(cols[5] - 8, y - 12.5, value, bold ? 10 : 9, bold, BLACK, 'right');
+    y -= 18;
+  };
+  const totTop = y;
+  trow('Sub-total', money(q.total), false);
+  trow('Shipping charges', 'Not included', true);
+  trow('Total (' + cur + ')', money(q.total), true, FILL);
+  line(tl, totTop, tl, y, LINE, 0.6); line(cols[4], totTop, cols[4], y, LINE, 0.6);
+  let wy = totTop - 13;
+  text(L + 10, wy, 'Amount in words (excluding shipping):', 8, false, GREY); wy -= 12;
+  wrapText(amountInWords(q.total, cur), tl - L - 20, 9, true).forEach(s => { text(L + 10, wy, s, 9, true); wy -= 11.5; });
+  y = Math.min(y, wy + 4);
+  line(L, y, R, y, BLACK, 1);
+
+  // shipping notice
+  y -= 14;
+  const nl = wrapText(d.shipping_note || 'Shipping charges are NOT included.', R - L - 40, 9);
+  const nh = 26 + nl.length * 12;
+  box(L + 10, y - nh, R - L - 20, nh, BLACK, '0.97 0.97 0.97', 1.4);
+  text(L + 20, y - 16, 'IMPORTANT: SHIPPING CHARGES ARE NOT INCLUDED', 10, true, BLACK);
+  let ny = y - 30; nl.forEach(s => { text(L + 20, ny, s, 9, false, DARK); ny -= 12; });
+  y -= nh + 18;
+
+  // terms (moves to a second page if it runs long)
+  const terms = [];
+  if (d.payment_terms) terms.push('Payment: ' + d.payment_terms);
+  terms.push(...lines(d.terms));
+  const SIGN_SPACE = 100;
+  if (terms.length) {
+    text(L + 14, y, 'Terms & conditions', 10, true); y -= 15;
+    terms.forEach((s, i) => {
+      const wl = wrapText(s, R - L - 46, 8.5);
+      if (y - wl.length * 11 < B + 40) { newPage(); y = T - 30; }
+      text(L + 14, y, (i + 1) + '.', 8.5, false, BLACK);
+      wl.forEach(l => { text(L + 28, y, l, 8.5, false, DARK); y -= 11; }); y -= 3;
+    });
+  }
+  if (y < B + SIGN_SPACE + 30) { newPage(); y = T - 30; }
+
+  // signature
+  const sy = B + 70;
+  text(R - 14, sy + 40, 'For ' + company, 9.5, true, BLACK, 'right');
+  line(R - 170, sy + 4, R - 14, sy + 4, BLACK, 0.6);
+  text(R - 14, sy - 8, 'Authorised Signatory', 8.5, false, DARK, 'right');
+  if (d.s_signatory) text(R - 14, sy - 20, d.s_signatory, 8.5, false, GREY, 'right');
+  wrapText(d.closing, 250, 8.5).forEach((s, i) => text(L + 14, sy - 8 - i * 11, s, 8.5, false, DARK));
+
+  // footers
+  pages.forEach((p, i) => {
+    ops = p;
+    line(L, B + 22, R, B + 22, LINE, 0.6);
+    text((L + R) / 2, B + 9, 'This is a computer-generated quotation.   ' + q.number + '   Page ' + (i + 1) + ' of ' + pages.length, 7.5, false, GREY, 'center');
+  });
+
+  const n = pages.length;
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [' + pages.map((_, i) => (5 + i * 2) + ' 0 R').join(' ') + '] /Count ' + n + ' >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
+  pages.forEach((p, i) => {
+    const stream = p.join('\n');
+    objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + (6 + i * 2) + ' 0 R >>');
+    objs.push('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
+  });
+  objs.push('<< /Title ' + pdfStr('Quotation ' + q.number + ' - ' + q.company) + ' /Author ' + pdfStr(company) + ' /Producer (Shree Pharma Dashboard) >>');
+  let pdf = '%PDF-1.4\n'; const offs = [];
+  objs.forEach((o, i) => { offs.push(pdf.length); pdf += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+  const xref = pdf.length;
+  pdf += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+  pdf += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R /Info ' + objs.length + ' 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+  const bytes = new Uint8Array(pdf.length);
+  for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 255;
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+const slug = s => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, 'and').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+function quoteFileName(q) {
+  const seller = slug((q.data && q.data.s_company) || 'Shree Pharma') || 'Quotation';
+  return seller + '_Quotation_' + q.number + '_' + (slug(q.company).slice(0, 40) || 'Buyer') + '.pdf';
+}
+function downloadQuote(q) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(buildQuotePdf(q)); a.download = quoteFileName(q);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+async function shareQuote(q) {
+  const file = new File([buildQuotePdf(q)], quoteFileName(q), { type: 'application/pdf' });
+  try { await navigator.share({ files: [file], title: 'Quotation ' + q.number }); }
+  catch (e) { if (e && e.name !== 'AbortError') downloadQuote(q); }
+}
+const canShareFiles = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.pdf', { type: 'application/pdf' })] })); } catch (e) { return false; } };
+
+/* form */
+const QF = ['s_company', 's_tagline', 's_address', 's_phone', 's_email', 's_website', 's_gstin', 's_iec', 's_signatory', 'product', 'description', 'unit', 'payment_terms', 'shipping_note', 'terms', 'closing', 'valid_until'];
+const qEl = k => $('qf_' + k);
+function todayIST() { return new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10); }
+function fillDefaults(def) { QF.forEach(k => { if (qEl(k)) qEl(k).value = def[k] || ''; }); updateQuoteSummaries(); }
+function updateQuoteSummaries() {
+  $('qsProduct').textContent = qEl('product').value || 'Not set';
+  $('qsTerms').textContent = /100\s*%\s*advance/i.test(qEl('payment_terms').value) ? '100% advance, shipping excluded' : 'Shipping excluded';
+  $('qsSeller').textContent = [qEl('s_company').value, qEl('s_gstin').value ? 'GSTIN added' : 'no GSTIN'].filter(Boolean).join(', ');
+}
+function qTotalPreview() {
+  const qty = parseInt(String($('qQty').value).replace(/[,\s]/g, ''), 10);
+  const m = String($('qPrice').value).trim().replace(/,/g, '').match(/^(\d{1,7})(?:\.(\d{1,4}))?$/);
+  $('qPriceCur').textContent = $('qCur').value;
+  if (!(qty > 0) || !m) { $('qTotal').textContent = '–'; return; }
+  const units = BigInt(m[1]) * 10000n + BigInt((m[2] || '').padEnd(4, '0'));
+  const cents = (BigInt(qty) * units + 50n) / 100n;
+  $('qTotal').textContent = $('qCur').value + ' ' + money((cents / 100n).toString() + '.' + (cents % 100n).toString().padStart(2, '0'));
+}
+['qQty', 'qPrice'].forEach(id => $(id).addEventListener('input', qTotalPreview));
+$('qCur').addEventListener('change', qTotalPreview);
+$('quoteForm').addEventListener('input', e => { if (e.target.id && e.target.id.startsWith('qf_')) updateQuoteSummaries(); });
+
+/* pick the buyer from your leads */
+let findTimer = null, FOUND = [];
+function setBuyer(p) {
+  $('qCompany').value = p.company || ''; $('qContact').value = p.contact || ''; $('qEmail').value = p.email || ''; $('qCountry').value = p.country || '';
+}
+$('qFind').addEventListener('input', () => {
+  clearTimeout(findTimer);
+  const q = $('qFind').value.trim();
+  if (q.length < 2) { $('qFindList').innerHTML = ''; $('qFindList').hidden = true; return; }
+  findTimer = setTimeout(async () => {
+    try {
+      const d = await api('/api/leads?' + new URLSearchParams({ q, page: 1 }));
+      FOUND = d.rows.slice(0, 8);
+      $('qFindList').innerHTML = FOUND.length ? FOUND.map((r, i) => '<button type="button" class="pick" data-pick="' + i + '"><b>' + esc(r.company || r.email) + '</b><small>' + esc([r.first_name, r.email, r.country].filter(Boolean).join(' · ')) + '</small></button>').join('')
+        : '<div class="empty" style="padding:10px 0">No lead matches "' + esc(q) + '". Type the buyer details below instead.</div>';
+      $('qFindList').hidden = false;
+    } catch (e) { $('qFindList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; $('qFindList').hidden = false; }
+  }, 300);
+});
+$('qFindList').addEventListener('click', e => {
+  const b = e.target.closest('[data-pick]'); if (!b) return;
+  const r = FOUND[Number(b.dataset.pick)];
+  setBuyer({ company: r.company || '', contact: r.first_name || '', email: r.email, country: r.country || '' });
+  $('qFind').value = ''; $('qFindList').hidden = true; $('qFindList').innerHTML = '';
+  toast('Buyer filled in from your leads');
+  $('qQty').focus();
+});
+
+async function loadQuotes() {
+  try { QUOTES = await api('/api/quotes?page=' + quotePage); } catch (e) { $('quoteList').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
+  if (!QUOTES_READY) { resetQuoteForm(); QUOTES_READY = true; }
+  if (QUOTE_PREFILL) {
+    const p = QUOTE_PREFILL; QUOTE_PREFILL = null;
+    resetQuoteForm(); setBuyer(p);
+    if (/^[\d,\s]+$/.test(String(p.quantity || '').trim())) $('qQty').value = String(p.quantity).replace(/[^\d]/g, '');
+    qTotalPreview(); $('qPrice').focus();
+  }
+  $('quoteList').innerHTML = QUOTES.rows.length ? QUOTES.rows.map(r =>
+    '<div class="item click" data-q="' + r.id + '" tabindex="0" role="button" aria-label="Download quotation ' + esc(r.number) + '"><div class="t"><b>' + esc(r.company) + '</b>' +
+    '<small>' + esc(r.number) + ' · ' + quoteDate(r.created_at) + '</small></div><span class="muted" style="white-space:nowrap">' + esc(r.currency) + ' ' + money(r.total) + '</span>' +
+    '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg></div>').join('')
+    : '<div class="empty">No quotations yet. Every quotation you create is kept here so you can download it again.</div>';
+  const pages = Math.max(1, Math.ceil(QUOTES.total / QUOTES.per));
+  $('qPg').textContent = 'Page ' + QUOTES.page + ' of ' + pages; $('qPager').hidden = pages < 2;
+  $('qPrev').disabled = QUOTES.page <= 1; $('qNext').disabled = QUOTES.page >= pages;
+}
+let QUOTES_READY = false;
+function resetQuoteForm() {
+  $('quoteForm').reset(); $('qResult').hidden = true; $('quoteForm').hidden = false; msg($('qMsg'), '');
+  $('qDate').value = todayIST();
+  if (QUOTES) fillDefaults(QUOTES.defaults);
+  $('qFindList').hidden = true;
+  qTotalPreview();
+}
+$('qRestore').onclick = () => {
+  if (!QUOTES || !confirm('Put back the original wording for the product, terms and your details? Buyer, quantity and rate stay as they are.')) return;
+  fillDefaults(QUOTES.builtIn); toast('Original wording restored');
+};
+$('quoteForm').addEventListener('submit', e => {
+  e.preventDefault();
+  busy($('qMake'), async () => {
+    msg($('qMsg'), '');
+    const body = { company: $('qCompany').value, contact: $('qContact').value, email: $('qEmail').value, country: $('qCountry').value,
+      currency: $('qCur').value, qty: $('qQty').value, unit_price: $('qPrice').value, date: $('qDate').value, save_defaults: $('qSaveDef').checked };
+    QF.forEach(k => body[k] = qEl(k).value);
+    try {
+      const r = await api('/api/quotes', body);
+      LAST_QUOTE = r.quote;
+      $('quoteForm').hidden = true; $('qResult').hidden = false;
+      $('qResTitle').textContent = 'Quotation ' + r.quote.number + ' downloaded';
+      $('qResText').textContent = r.quote.company + ': ' + qtyFmt(r.quote.qty) + ' ' + r.quote.data.unit + ' at ' + r.quote.currency + ' ' + money(r.quote.unit_price) + ' = ' + r.quote.currency + ' ' + money(r.quote.total) + ', shipping not included. File: ' + quoteFileName(r.quote);
+      $('qShare').hidden = !canShareFiles();
+      downloadQuote(r.quote);
+      $('qResult').focus();
+      if (body.save_defaults) toast('Saved as your defaults for next quotations');
+      quotePage = 1; await loadQuotes();
+    } catch (err) { msg($('qMsg'), err.message, 'err'); }
+  }, 'Creating…');
+});
+$('qDownload').onclick = () => { if (LAST_QUOTE) downloadQuote(LAST_QUOTE); };
+$('qShare').onclick = () => { if (LAST_QUOTE) shareQuote(LAST_QUOTE); };
+$('qNew').onclick = () => { resetQuoteForm(); $('qFind').focus(); };
+$('qEdit').onclick = () => { $('qResult').hidden = true; $('quoteForm').hidden = false; $('qPrice').focus(); };
+$('quoteList').addEventListener('click', e => { const it = e.target.closest('[data-q]'); if (it && QUOTES) { const q = QUOTES.rows.find(r => String(r.id) === it.dataset.q); if (q) { downloadQuote(q); toast('Downloading ' + q.number); } } });
+$('quoteList').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-q]')) { e.preventDefault(); e.target.closest('[data-q]').click(); } });
+$('qPrev').onclick = () => { quotePage--; loadQuotes(); };
+$('qNext').onclick = () => { quotePage++; loadQuotes(); };
+function makeQuoteFor(p) { QUOTE_PREFILL = p; if ($('dlg').open) $('dlg').close(); if (location.hash === '#quotes') loadQuotes(); else location.hash = '#quotes'; }
 
 /* ---------- start ---------- */
 showTab();
