@@ -221,6 +221,8 @@ async function api(request, env, url, p, m) {
         if (!r.sent) throw bad('The notification could not be delivered. Turn notifications off and on again on this device.');
         return json(r);
       }
+      case 'GET /api/quotes': return json(await listQuotes(env, url, s));
+      case 'POST /api/quotes': return json(await createQuote(env, s, body));
       case 'GET /api/log': {
         const { results } = await env.DB.prepare('SELECT at, action, email, detail FROM log ORDER BY id DESC LIMIT 60').all();
         return json({ log: results });
@@ -498,6 +500,117 @@ async function exportLeads(env, url) {
     `SELECT id, email, first_name, company, country, business_type, phone, website, source, status, notes, sent_at, followup_sent_at, replied_at, created_at
      FROM leads WHERE id > ? ORDER BY id LIMIT 500`).bind(after).all();
   return { rows: results, statuses: STATUS };
+}
+
+/* ---------------- PDF quotes ---------------- */
+
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'AED', 'INR'];
+const QUOTE_TEXT = {
+  tagline: 'Supplier & Exporter of Bacteriostatic Water for Injection USP',
+  product: 'Bacteriostatic Water for Injection USP',
+  description: '30 mL multi-dose glass vial with flip-off seal, individual carton\nWater for Injection USP with Benzyl Alcohol USP 0.9% as preservative\nSterile, non-pyrogenic. Shelf life 36 months. CoA with every batch',
+  unit: 'vials',
+  payment_terms: '100% advance payment by bank transfer before dispatch.',
+  shipping_note: 'The prices in this quotation are for the goods only. Shipping charges are NOT included and will be quoted separately based on the destination and the shipping method you choose.',
+  terms: 'Prices are per vial, for the quantity stated above, and exclude shipping charges.\nGoods are dispatched after receipt of the full advance payment.\nA Certificate of Analysis (CoA) from the manufacturer is supplied with every batch. Batch details and expiry dates are shared before dispatch.\nExport documents for customs clearance are prepared by us.\nSupplied to registered businesses only. The product is a diluent for drugs and is not for inhalation or for use in neonates.',
+  closing: 'Thank you for your enquiry.'
+};
+// Everything on the quote that can be edited, with its length limit.
+const QUOTE_FIELDS = {
+  s_company: 120, s_tagline: 160, s_address: 300, s_phone: 60, s_email: 120, s_website: 120, s_gstin: 30, s_iec: 30, s_signatory: 80,
+  product: 160, description: 600, unit: 20, payment_terms: 400, shipping_note: 600, terms: 6000, closing: 200, valid_until: 40
+};
+const SAVABLE_DEFAULTS = ['s_company', 's_tagline', 's_address', 's_phone', 's_email', 's_website', 's_gstin', 's_iec', 's_signatory', 'product', 'description', 'unit', 'payment_terms', 'shipping_note', 'terms', 'closing'];
+
+function quoteDefaults(s) {
+  const saved = (() => { try { return JSON.parse(s.quote_defaults || '{}'); } catch (e) { return {}; } })();
+  const base = {
+    s_company: s.company_name || 'Shree Pharma', s_tagline: QUOTE_TEXT.tagline, s_address: s.address || '', s_phone: s.whatsapp || '',
+    s_email: s.alert_email || s.gmail_email || '', s_website: (s.websiteUrl || '').replace(/^https?:\/\//, '').replace(/\/+$/, ''),
+    s_gstin: '', s_iec: '', s_signatory: s.your_name || '',
+    product: QUOTE_TEXT.product, description: QUOTE_TEXT.description, unit: QUOTE_TEXT.unit, payment_terms: QUOTE_TEXT.payment_terms,
+    shipping_note: QUOTE_TEXT.shipping_note, terms: QUOTE_TEXT.terms, closing: QUOTE_TEXT.closing, valid_until: ''
+  };
+  for (const k of SAVABLE_DEFAULTS) if (typeof saved[k] === 'string') base[k] = saved[k];
+  return base;
+}
+
+// Money is handled as whole numbers (ten-thousandths of a unit), never as floating point.
+function parsePrice(v) {
+  const m = String(v == null ? '' : v).trim().replace(/,/g, '').match(/^(\d{1,7})(?:\.(\d{1,4}))?$/);
+  if (!m) return null;
+  const units = BigInt(m[1]) * 10000n + BigInt((m[2] || '').padEnd(4, '0'));
+  return units > 0n ? units : null;
+}
+function fmtUnits(units, minDp) {
+  const whole = units / 10000n, frac = (units % 10000n).toString().padStart(4, '0');
+  let f = frac.replace(/0+$/, ''); if (f.length < minDp) f = f.padEnd(minDp, '0');
+  return whole.toString() + (f ? '.' + f : '');
+}
+function quoteTotal(qty, priceUnits) {
+  const cents = (BigInt(qty) * priceUnits + 50n) / 100n;   // round half up to cents
+  return fmtUnits(cents * 100n, 2);
+}
+
+async function createQuote(env, s, b) {
+  const company = clip(b.company, 200);
+  if (company.length < 2) throw bad('Enter the buyer\'s company name.');
+  const currency = String(b.currency || '').toUpperCase();
+  if (CURRENCIES.indexOf(currency) < 0) throw bad('Choose a currency.');
+  const qtyRaw = String(b.qty == null ? '' : b.qty).trim();
+  const qty = parseInt(qtyRaw.replace(/[,\s]/g, ''), 10);
+  if (!/^[\d,\s]+$/.test(qtyRaw) || !(qty >= 1 && qty <= 10000000)) throw bad('Enter the quantity as a whole number.');
+  const price = parsePrice(b.unit_price);
+  if (!price || price > 1000000000n) throw bad('Enter the rate as a number, like 0.85 (up to 4 decimals).');
+  let email = '';
+  if (String(b.email || '').trim()) { email = cleanEmail(b.email); if (!email) throw bad('The buyer email is not a valid address.'); }
+  const dateStr = String(b.date || '').trim();
+  let created = Date.now();
+  if (dateStr) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || isNaN(Date.parse(dateStr + 'T12:00:00Z'))) throw bad('Choose a valid quotation date.');
+    created = Date.parse(dateStr + 'T06:30:00Z');       // noon in India on that day
+  }
+  const data = {};
+  for (const [k, n] of Object.entries(QUOTE_FIELDS)) data[k] = String(b[k] == null ? '' : b[k]).replace(/\r/g, '').trim().slice(0, n);
+  if (data.s_company.length < 2) throw bad('Enter your company name for the quote.');
+  if (!data.product) throw bad('Enter the product name.');
+  data.unit = data.unit || 'vials';
+  const row = {
+    company, contact: clip(b.contact, 120), email, country: clip(b.country, 80), currency, qty,
+    unit_price: fmtUnits(price, 2), total: quoteTotal(qty, price), payment_terms: data.payment_terms, notes: ''
+  };
+  const r = await env.DB.prepare(`INSERT INTO quotes(created_at, company, contact, email, country, currency, qty, unit_price, total, payment_terms, notes, data) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(created, row.company, row.contact, row.email, row.country, row.currency, row.qty, row.unit_price, row.total, row.payment_terms, row.notes, JSON.stringify(data)).run();
+  const id = r.meta && r.meta.last_row_id;
+  const number = 'SP-' + new Date(created + 5.5 * 3600000).getUTCFullYear() + '-' + String(id).padStart(4, '0');
+  await env.DB.prepare('UPDATE quotes SET number = ? WHERE id = ?').bind(number, id).run();
+  if (b.save_defaults) {
+    const keep = {}; for (const k of SAVABLE_DEFAULTS) keep[k] = data[k];
+    await setSettings(env, { quote_defaults: JSON.stringify(keep) });
+  }
+  const line = 'Quote ' + number + ': ' + row.qty.toLocaleString('en-US') + ' ' + data.unit + ' at ' + currency + ' ' + row.unit_price + ' = ' + currency + ' ' + row.total;
+  if (email) {
+    await env.DB.prepare(`UPDATE leads SET notes = CASE WHEN notes = '' THEN ? ELSE notes || ' · ' || ? END, updated_at = ? WHERE email = ?`)
+      .bind(line, line, Date.now(), email).run();
+  }
+  await log(env, 'Quote created', email, number + ' · ' + company);
+  return { quote: { id, number, created_at: created, ...row, data } };
+}
+
+async function listQuotes(env, url, s) {
+  const page = Math.max(1, parseInt(url.searchParams.get('page'), 10) || 1);
+  const per = 20;
+  const [rows, total] = await Promise.all([
+    env.DB.prepare('SELECT * FROM quotes ORDER BY id DESC LIMIT ? OFFSET ?').bind(per, (page - 1) * per).all(),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM quotes').first()
+  ]);
+  const defaults = quoteDefaults(s);
+  const list = rows.results.map(r => {
+    let data = {}; try { data = JSON.parse(r.data || '{}'); } catch (e) {}
+    if (!data.s_company) data = { ...defaults, payment_terms: r.payment_terms || defaults.payment_terms };   // older quotes
+    return { ...r, data };
+  });
+  return { rows: list, total: total ? Number(total.n) : 0, page, per, defaults, builtIn: { ...quoteDefaults({ ...s, quote_defaults: '{}' }) }, currencies: CURRENCIES };
 }
 
 /* ---------------- phone notifications ---------------- */
