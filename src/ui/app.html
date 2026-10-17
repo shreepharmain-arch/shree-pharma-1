@@ -125,7 +125,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);box
 .kv dd{margin:0;overflow-wrap:anywhere}
 .counts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mute)}
 .progress{height:8px;background:#e9edf2;border-radius:6px;overflow:hidden;margin-top:12px}
-.progress i{display:block;height:100%;background:var(--magenta);width:0;transition:width .2s}
+.progress i{display:block;height:100%;background:var(--magenta);width:0;transition:width .3s}
+#draftProg{padding:14px 16px}
+.dp-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--bg);padding:6px 8px;border-radius:6px;display:block;overflow-wrap:anywhere;margin-top:4px}
 .ph{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--bg);border-radius:5px;padding:2px 6px;margin:2px 4px 2px 0;cursor:pointer;border:1px solid var(--rule)}
 
@@ -234,6 +236,11 @@ details.qsect{margin-top:12px;box-shadow:none}
     </div>
   </div>
   <div id="homeMsg" role="status"></div>
+  <div class="card" id="draftProg" hidden>
+    <div class="dp-row"><b id="draftProgText">Creating drafts…</b><span class="muted" id="draftProgNum"></span></div>
+    <div class="progress" role="progressbar" aria-labelledby="draftProgText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="draftBar"><i></i></div>
+    <p class="help" style="margin:8px 0 0">Gmail allows about 12 at a time, so this runs in batches. You can keep using the dashboard.</p>
+  </div>
 
   <div class="card" id="approveCard" hidden>
     <div class="card-head">
@@ -462,6 +469,7 @@ details.qsect{margin-top:12px;box-shadow:none}
           <div><label for="company_name">Company name</label><input type="text" id="company_name" name="company_name"></div>
           <div><label for="whatsapp">WhatsApp number</label><input type="text" id="whatsapp" name="whatsapp"></div>
           <div><label for="alert_email">Send alerts to</label><input type="email" id="alert_email" name="alert_email"><div class="help">Replies, website requests and the daily summary go here.</div></div>
+          <div><label for="main_email">Company email (in signature)</label><input type="email" id="main_email" name="main_email"><div class="help">Shown as "Company email" under your WhatsApp. Hidden when it is the same as the Gmail you send from.</div></div>
         </div>
         <label for="address">Business postal address</label>
         <input type="text" id="address" name="address" placeholder="Street, city, state, PIN, India">
@@ -477,7 +485,7 @@ details.qsect{margin-top:12px;box-shadow:none}
       <summary><h2>Sending</h2><span class="sum" id="sendSum"></span></summary>
       <div class="in">
         <div class="grid2">
-          <div><label for="daily_limit">Emails per day, all lists together</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="150" inputmode="numeric"><div class="help">Split evenly across the lists that are on. Start low and raise slowly: 20, 35, 50, 70.</div></div>
+          <div><label for="daily_limit">Emails per day, all lists together</label><input type="number" id="daily_limit" name="daily_limit" min="1" max="250" inputmode="numeric"><div class="help">Split evenly across the lists that are on. Up to 250. Start low and raise slowly: 20, 35, 50, 70 — a new Gmail sending too many at once gets marked as spam.</div></div>
           <div><label for="followup_days">Follow up after (business days)</label><input type="number" id="followup_days" name="followup_days" min="1" max="30" inputmode="numeric"></div>
           <div><label for="stop_days">Mark "No reply" after the follow-up (business days)</label><input type="number" id="stop_days" name="stop_days" min="1" max="60" inputmode="numeric"></div>
           <div><label for="auto_drafts">Prepare drafts automatically</label><select id="auto_drafts" name="auto_drafts"><option value="yes">Yes, every weekday from 9 AM</option><option value="no">No, only when I tap Create drafts</option></select></div>
@@ -710,11 +718,52 @@ $('skipSel').onclick = () => busy($('skipSel'), async () => {
   } catch (e) { msg($('homeMsg'), e.message + (n ? ' (' + n + ' skipped before this)' : ''), 'err'); }
   loadHome();
 }, 'Skipping…');
-$('makeDrafts').onclick = () => busy($('makeDrafts'), async () => {
-  try { const r = await api('/api/drafts', {}); msg($('homeMsg'), r.message || (r.created + ' created'), r.created ? 'ok' : 'warn'); }
-  catch (e) { msg($('homeMsg'), e.message, 'err'); }
-  loadHome();
-}, 'Creating…');
+// Creates drafts in batches of about 12 (Cloudflare's limit per request) until today's limit is covered.
+let draftRun = false;
+function drawDraftProg(made, total, done) {
+  const pct = total > 0 ? Math.min(100, Math.round(made / total * 100)) : (done ? 100 : 0);
+  $('draftBar').firstElementChild.style.width = pct + '%';
+  $('draftBar').setAttribute('aria-valuenow', String(pct));
+  $('draftProgNum').textContent = total > 0 ? made + ' of ' + total : (made ? made + ' made' : '');
+  $('draftProgText').textContent = done ? (made ? made + ' draft' + (made === 1 ? '' : 's') + ' ready' : 'No new drafts') : 'Creating drafts…';
+}
+async function notifyDraftsReady(n) {
+  const title = n + ' draft' + (n === 1 ? '' : 's') + ' ready to approve';
+  toast(title);
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const opts = { body: 'Open Home to review and approve them.', icon: '/icon-512.png', badge: '/icon-512.png', tag: 'drafts', renotify: true, data: { url: '/app#home' } };
+    const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration('/app') : null;
+    if (reg) await reg.showNotification(title, opts); else new Notification(title, opts);
+  } catch (e) { /* the on-screen message already says it */ }
+}
+$('makeDrafts').onclick = () => {
+  if (draftRun) return;
+  draftRun = true;
+  return busy($('makeDrafts'), async () => {
+    let made = 0, total = 0, last = null, err = '';
+    $('draftProg').hidden = false; msg($('homeMsg'), '');
+    drawDraftProg(0, 0, false);
+    try {
+      for (let round = 0; round < 30; round++) {
+        const r = await api('/api/drafts', {});
+        last = r; made += r.created || 0;
+        const room = typeof r.room === 'number' ? r.room : 0;
+        total = made + room;
+        drawDraftProg(made, total, false);
+        if (!r.created || room <= 0 || r.failed) break;
+      }
+    } catch (e) { err = e.message; }
+    drawDraftProg(made, made, true);
+    if (err) msg($('homeMsg'), err + (made ? ' (' + made + ' draft' + (made === 1 ? '' : 's') + ' were made before this.)' : ''), 'err');
+    else if (made) {
+      msg($('homeMsg'), made + ' draft' + (made === 1 ? '' : 's') + ' created in Gmail and ready to approve.' + (last && last.failed ? ' Some leads were skipped; see the activity log.' : ''), 'ok');
+      notifyDraftsReady(made);
+    } else msg($('homeMsg'), (last && last.message) || 'No drafts were created.', 'warn');
+    setTimeout(() => { $('draftProg').hidden = true; }, made ? 4000 : 0);
+    loadHome();
+  }, 'Creating…').finally(() => { draftRun = false; });
+};
 $('checkNow').onclick = () => busy($('checkNow'), async () => {
   try {
     const r = await api('/api/replies', {});
@@ -1007,7 +1056,7 @@ $('eNext').onclick = () => { enqPage++; loadEnquiries(); };
 async function refreshBadge() { try { const d = await api('/api/summary'); SUMMARY = d; const b = $('enqBadge'); b.hidden = !d.newEnquiries; b.textContent = d.newEnquiries; } catch (e) {} }
 
 /* ---------- settings ---------- */
-const FIELDS_SET = ['your_name', 'company_name', 'whatsapp', 'alert_email', 'address', 'website', 'brochure_link', 'daily_limit', 'followup_days', 'stop_days', 'auto_drafts', 'paused', 'tpl_first_subject', 'tpl_first_body', 'tpl_fu_body'];
+const FIELDS_SET = ['your_name', 'company_name', 'whatsapp', 'alert_email', 'main_email', 'address', 'website', 'brochure_link', 'daily_limit', 'followup_days', 'stop_days', 'auto_drafts', 'paused', 'tpl_first_subject', 'tpl_first_body', 'tpl_fu_body'];
 async function loadSettings() {
   let d;
   try { d = await api('/api/settings'); } catch (e) { $('gmailBox').innerHTML = '<div class="alert err">' + esc(e.message) + '</div>'; return; }
@@ -1050,9 +1099,9 @@ document.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => {
 document.querySelectorAll('[data-preview]').forEach(b => b.onclick = () => {
   const isFu = b.dataset.preview === 'fu';
   const v = k => ($(k) ? $(k).value : '');
-  const map = { FirstName: 'Ahmed', Company: 'Gulf Pharma Trading LLC', Country: 'United Arab Emirates', YourName: v('your_name'), CompanyName: v('company_name'), WhatsApp: v('whatsapp'),
+  const map = { FirstName: 'Ahmed', Company: 'Gulf Pharma Trading LLC', Country: 'United Arab Emirates', YourName: v('your_name'), CompanyName: v('company_name'), WhatsApp: v('whatsapp'), MainEmail: (v('main_email') && v('main_email').toLowerCase() !== ((SETTINGS && SETTINGS.gmail && SETTINGS.gmail.email) || '').toLowerCase()) ? v('main_email') : '',
     Website: v('website') || (SETTINGS && SETTINGS.autoWebsite) || '', BrochureLink: v('brochure_link') || (SETTINGS && SETTINGS.autoBrochure) || '', Address: v('address'), UnsubscribeLink: ((SETTINGS && SETTINGS.origin) || '') + '/u/…' };
-  const render = t => String(t).split('\n').filter(line => { const m = line.trim().match(/^\{\{\s*(\w+)\s*\}\}$/); return !(m && m[1] in map && !String(map[m[1]]).trim()); })
+  const render = t => String(t).split('\n').filter(line => { const ks = (line.match(/\{\{\s*(\w+)\s*\}\}/g) || []).map(x => x.replace(/[{}\s]/g, '')); return !(ks.length && ks.every(k => k in map && !String(map[k]).trim())); })
     .map(line => line.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (k in map ? map[k] : m))).join('\n').replace(/\n{3,}/g, '\n\n').trim();
   const subject = isFu ? 'Re: ' + render(v('tpl_first_subject')) : render(v('tpl_first_subject'));
   openDialog('Preview (sample lead)', '<p style="margin:10px 0 0"><b>' + esc(subject) + '</b></p><pre>' + esc(render(v(isFu ? 'tpl_fu_body' : 'tpl_first_body'))) + '</pre>');
