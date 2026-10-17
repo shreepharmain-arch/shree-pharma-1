@@ -5,7 +5,7 @@ import { ensureSchema, getSettings, setSettings, log, counter, bump, EDITABLE, D
 import { Gmail, GmailAuthError, BudgetError, oauthStartUrl, exchangeCode, googleUrls, buildMime, textToHtml } from './gmail.js';
 import {
   STATUS, PENDING, HAS_DRAFT, MANUAL_STATUSES, effective, dailyLimit, createDrafts, sendQueued, checkReplies, syncDrafts,
-  closeLead, sendAlert, compose, runCron, sentTodayKey, listPlan
+  closeLead, sendAlert, compose, runCron, sentTodayKey, listPlan, pendingCount
 } from './engine.js';
 import { pushAll, vapidKeys, validSubscription, SERVICE_WORKER, MAX_DEVICES } from './push.js';
 import {
@@ -153,7 +153,12 @@ async function oauthCallback(request, env, url) {
   const pr = await fetch(googleUrls(env).api + '/profile', { headers: { authorization: 'Bearer ' + tok.access_token } });
   const profile = await pr.json().catch(() => ({}));
   if (!pr.ok || !profile.emailAddress) return html(simplePage('Could not read the Gmail address', '<p>Make sure the Gmail API is enabled in your Google Cloud project, then try again.</p>' + back), 502);
+  const before = await getSettings(env);
+  const newEmail = profile.emailAddress.toLowerCase();
+  const oldEmail = String(before.gmail_email || before.gmail_prev || '').trim().toLowerCase();
+  if (oldEmail && oldEmail !== newEmail) await switchSender(env, oldEmail, newEmail);
   await setSettings(env, {
+    gmail_prev: newEmail,
     gmail_refresh: tok.refresh_token,
     gmail_access: tok.access_token,
     gmail_access_exp: String(Date.now() + (Number(tok.expires_in) || 3600) * 1000),
@@ -163,6 +168,21 @@ async function oauthCallback(request, env, url) {
   });
   await log(env, 'Gmail connected', profile.emailAddress, '');
   return redirect('/app#settings', { 'set-cookie': cookie(OAUTH_COOKIE, '', 0) });
+}
+
+// Moving to a different Gmail account: drafts made in the old account can't be sent from the new one,
+// so they are put back to be drafted again. Leads already emailed remember the old address,
+// and their follow-up goes out from the new account as a fresh email.
+async function switchSender(env, oldEmail, newEmail) {
+  const now = Date.now();
+  const clear = `draft_id = NULL, drafted_at = NULL, draft_subject = NULL, draft_body = NULL, updated_at = ${now}`;
+  const r = await env.DB.batch([
+    env.DB.prepare('UPDATE leads SET sent_from = ? WHERE sent_from IS NULL AND thread_id IS NOT NULL').bind(oldEmail),
+    env.DB.prepare(`UPDATE leads SET status = 'new', ${clear} WHERE status IN ('drafting', 'drafted', 'queued', 'sending')`),
+    env.DB.prepare(`UPDATE leads SET status = 'sent', ${clear} WHERE status IN ('fu_drafting', 'fu_drafted', 'fu_queued', 'fu_sending')`)
+  ]);
+  const redo = ((r[1].meta && r[1].meta.changes) || 0) + ((r[2].meta && r[2].meta.changes) || 0);
+  await log(env, 'Sending account changed', newEmail, 'from ' + oldEmail + (redo ? '; ' + redo + ' unsent draft(s) will be made again in the new account' : ''));
 }
 
 /* ---------------- private API ---------------- */
@@ -202,7 +222,7 @@ async function api(request, env, url, p, m) {
       case 'POST /api/settings': return json(await saveSettings(env, body));
       case 'POST /api/test-email': return json(await testEmail(env, s, gmail(6)));
       case 'POST /api/gmail/disconnect':
-        await setSettings(env, { gmail_refresh: '', gmail_access: '', gmail_access_exp: '0', gmail_email: '', gmail_status: '' });
+        await setSettings(env, { gmail_prev: s.gmail_email || s.gmail_prev || '', gmail_refresh: '', gmail_access: '', gmail_access_exp: '0', gmail_email: '', gmail_status: '' });
         await log(env, 'Gmail disconnected', '', '');
         return json({ ok: true });
       case 'GET /api/enquiries': return json(await listEnquiries(env, url));
@@ -417,9 +437,17 @@ async function updateList(env, b) {
   return { ok: true };
 }
 
+// How many more drafts today's limit still allows, counting only lists that are on and still have leads.
+async function draftRoom(env, s) {
+  const [plan, pending, sent] = await Promise.all([listPlan(env, s), pendingCount(env), counter(env, sentTodayKey())]);
+  const byLists = plan.lists.filter(l => l.active).reduce((a, l) => a + Math.max(0, l.share - l.used), 0);
+  return Math.max(0, Math.min(dailyLimit(s) - pending - sent, byLists));
+}
+
 async function apiDrafts(env, s, gm) {
   if (!s.gmail_email) return { created: 0, message: 'Connect Gmail in Settings first.' };
   const r = await createDrafts(env, gm, s, 12);
+  r.room = await draftRoom(env, s);
   if (r.created) return { ...r, message: r.created + ' draft(s) created in Gmail' + (r.followups ? ', including ' + r.followups + ' follow-up(s)' : '') + '.' };
   const fresh = await env.DB.prepare(`SELECT COUNT(*) AS n FROM leads WHERE status = 'new'`).first();
   if (!fresh || !Number(fresh.n)) return { ...r, message: 'No new leads left to email. Import more leads.' };
@@ -471,7 +499,8 @@ const SETTING_RULES = {
   website: v => { v = clip(v, 200); if (v && !/^https?:\/\/[^\s]+$/i.test(v)) throw bad('Website must start with https://'); return v; },
   brochure_link: v => { v = clip(v, 500); if (v && !/^https?:\/\/[^\s]+$/i.test(v)) throw bad('Brochure link must start with https://'); return v; },
   alert_email: v => { if (!String(v || '').trim()) return ''; const e = cleanEmail(v); if (!e) throw bad('Alert email is not a valid email address'); return e; },
-  daily_limit: v => { const n = parseInt(v, 10); if (!(n >= 1 && n <= 150)) throw bad('Daily limit must be between 1 and 150'); return String(n); },
+  main_email: v => { if (!String(v || '').trim()) return ''; const e = cleanEmail(v); if (!e) throw bad('Company email is not a valid email address'); return e; },
+  daily_limit: v => { const n = parseInt(v, 10); if (!(n >= 1 && n <= 250)) throw bad('Daily limit must be between 1 and 250'); return String(n); },
   followup_days: v => { const n = parseInt(v, 10); if (!(n >= 1 && n <= 30)) throw bad('Follow-up days must be between 1 and 30'); return String(n); },
   stop_days: v => { const n = parseInt(v, 10); if (!(n >= 1 && n <= 60)) throw bad('Stop-watching days must be between 1 and 60'); return String(n); },
   auto_drafts: v => (isYes(v) ? 'yes' : 'no'),
@@ -480,6 +509,7 @@ const SETTING_RULES = {
   tpl_first_body: v => { v = String(v || '').trim(); if (!v) throw bad('The first email cannot be empty'); return v.slice(0, 10000); },
   tpl_fu_body: v => { v = String(v || '').trim(); if (!v) throw bad('The follow-up email cannot be empty'); return v.slice(0, 10000); }
 };
+const PLACEHOLDERS = ['FirstName', 'Company', 'Country', 'YourName', 'CompanyName', 'WhatsApp', 'MainEmail', 'Website', 'BrochureLink', 'Address', 'UnsubscribeLink'];
 function bad(msg) { return Object.assign(new Error(msg), { status: 400 }); }
 
 function settingsView(s, url, env) {
@@ -494,7 +524,7 @@ function settingsView(s, url, env) {
     origin: s.origin,
     autoWebsite: s.websiteUrl,
     autoBrochure: s.brochureUrl,
-    placeholders: ['FirstName', 'Company', 'Country', 'YourName', 'CompanyName', 'WhatsApp', 'Website', 'BrochureLink', 'Address', 'UnsubscribeLink']
+    placeholders: PLACEHOLDERS
   };
 }
 
@@ -504,7 +534,7 @@ async function saveSettings(env, b) {
   for (const k of ['tpl_first_subject', 'tpl_first_body', 'tpl_fu_body']) {
     if (out[k]) {
       const unknown = (out[k].match(/\{\{\s*(\w+)\s*\}\}/g) || []).map(x => x.replace(/[{}\s]/g, ''))
-        .filter(x => ['FirstName', 'Company', 'Country', 'YourName', 'CompanyName', 'WhatsApp', 'Website', 'BrochureLink', 'Address', 'UnsubscribeLink'].indexOf(x) < 0);
+        .filter(x => PLACEHOLDERS.indexOf(x) < 0);
       if (unknown.length) throw bad('Unknown placeholder in a template: {{' + unknown[0] + '}}. Check the spelling.');
     }
   }
@@ -570,16 +600,21 @@ const QUOTE_FIELDS = {
 };
 const SAVABLE_DEFAULTS = ['s_company', 's_tagline', 's_address', 's_phone', 's_email', 's_website', 's_gstin', 's_iec', 's_signatory', 'product', 'description', 'unit', 'payment_terms', 'shipping_note', 'terms', 'closing'];
 
+const BUSINESS_IDS = { gstin: '27ADHPM6491M1ZU', iec: '0305066081' };
 function quoteDefaults(s) {
   const saved = (() => { try { return JSON.parse(s.quote_defaults || '{}'); } catch (e) { return {}; } })();
   const base = {
     s_company: s.company_name || 'Shree Pharma', s_tagline: QUOTE_TEXT.tagline, s_address: s.address || '', s_phone: s.whatsapp || '',
     s_email: s.alert_email || s.gmail_email || '', s_website: (s.websiteUrl || '').replace(/^https?:\/\//, '').replace(/\/+$/, ''),
-    s_gstin: '', s_iec: '', s_signatory: s.your_name || '',
+    s_gstin: BUSINESS_IDS.gstin, s_iec: BUSINESS_IDS.iec, s_signatory: s.your_name || '',
     product: QUOTE_TEXT.product, description: QUOTE_TEXT.description, unit: QUOTE_TEXT.unit, payment_terms: QUOTE_TEXT.payment_terms,
     shipping_note: QUOTE_TEXT.shipping_note, terms: QUOTE_TEXT.terms, closing: QUOTE_TEXT.closing, valid_until: ''
   };
-  for (const k of SAVABLE_DEFAULTS) if (typeof saved[k] === 'string') base[k] = saved[k];
+  for (const k of SAVABLE_DEFAULTS) {
+    if (typeof saved[k] !== 'string') continue;
+    if ((k === 's_gstin' || k === 's_iec') && !saved[k].trim()) continue; // an old blank default never hides the registered numbers
+    base[k] = saved[k];
+  }
   return base;
 }
 

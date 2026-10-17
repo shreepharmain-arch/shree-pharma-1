@@ -15,7 +15,7 @@ export const PENDING = ['drafting', 'drafted', 'queued', 'sending', 'fu_drafting
 export const WATCH = ['sent', 'fu_drafting', 'fu_drafted', 'fu_queued', 'fu_sending', 'fu_sent', 'no_reply'];
 export const HAS_DRAFT = ['drafted', 'queued', 'fu_drafted', 'fu_queued'];
 export const MANUAL_STATUSES = ['new', 'replied', 'interested', 'client', 'not_interested', 'no_reply', 'dnc'];
-const MAX_DAILY = 150;
+const MAX_DAILY = 250;
 
 const ph = n => Array(n).fill('?').join(',');
 
@@ -47,25 +47,47 @@ export function render(tpl, lead, s) {
     Website: s.websiteUrl || '',
     BrochureLink: s.brochureUrl || '',
     Address: s.address || '',
+    MainEmail: mainEmailFor(s),
     UnsubscribeLink: s.origin && lead.unsub_token ? s.origin + '/u/' + lead.unsub_token : ''
   };
   const fill = line => line.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (k in map ? String(map[k]) : m));
   const lines = String(tpl || '').replace(/\r\n/g, '\n').split('\n');
   const out = [];
   for (const line of lines) {
-    const only = line.trim().match(/^\{\{\s*(\w+)\s*\}\}$/);
-    if (only && only[1] in map && !String(map[only[1]]).trim()) continue; // drop a line whose only content is empty
+    // drop a line whose placeholders are all empty, e.g. "Company email: {{MainEmail}}" when there is none
+    const keys = (line.match(/\{\{\s*(\w+)\s*\}\}/g) || []).map(x => x.replace(/[{}\s]/g, ''));
+    if (keys.length && keys.every(k => k in map && !String(map[k]).trim())) continue;
     out.push(fill(line).replace(/[ \t]+$/, ''));
   }
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
+// The company email shown in the signature; hidden when it is the address the email is sent from.
+export function mainEmailFor(s) {
+  const m = String(s.main_email || '').trim().toLowerCase();
+  return m && m !== String(s.gmail_email || '').trim().toLowerCase() ? m : '';
+}
+
+// True when the lead's first email went out from a different Gmail account than the one connected now.
+export function movedSender(lead, s) {
+  const a = String(lead.sent_from || '').trim().toLowerCase(), b = String(s.gmail_email || '').trim().toLowerCase();
+  return !!(a && b && a !== b);
+}
+
 export function compose(lead, kind, s) {
   const isFu = kind === 'fu';
-  const subject = isFu
-    ? (/^re:/i.test(lead.subject || '') ? lead.subject : 'Re: ' + (lead.subject || ''))
-    : render(s.tpl_first_subject, lead, s).replace(/\s+/g, ' ').trim();
-  const text = render(isFu ? s.tpl_fu_body : s.tpl_first_body, lead, s);
+  const moved = isFu && movedSender(lead, s);
+  const orig = String(lead.subject || '').replace(/^(re:\s*)+/i, '').trim();
+  const subject = !isFu
+    ? render(s.tpl_first_subject, lead, s).replace(/\s+/g, ' ').trim()
+    : moved ? 'Following up: ' + orig : 'Re: ' + orig;
+  let text = render(isFu ? s.tpl_fu_body : s.tpl_first_body, lead, s);
+  if (moved) {
+    // a fresh email (not in the old thread), so say where the earlier one came from
+    const note = 'I wrote to you earlier from ' + String(lead.sent_from).toLowerCase() + '. I am now writing from our sales address.';
+    const cut = text.indexOf('\n\n');
+    text = cut > 0 ? text.slice(0, cut) + '\n\n' + note + text.slice(cut) : note + '\n\n' + text;
+  }
   const unsubUrl = s.origin && lead.unsub_token ? s.origin + '/u/' + lead.unsub_token : '';
   const listUnsub = [unsubUrl && '<' + unsubUrl + '>', s.gmail_email && '<mailto:' + s.gmail_email + '?subject=unsubscribe>'].filter(Boolean).join(', ');
   const raw = buildMime({
@@ -75,7 +97,7 @@ export function compose(lead, kind, s) {
     subject,
     text,
     html: textToHtml(text),
-    inReplyTo: isFu ? lead.message_id : '',
+    inReplyTo: isFu && !moved ? lead.message_id : '',
     listUnsubscribe: listUnsub,
     oneClick: !!unsubUrl
   });
@@ -180,7 +202,8 @@ async function draftList(env, gm, s, listId, room, result) {
     for (let i = 0; i < claimed.length; i++) {
       const lead = claimed[i];
       try {
-        if (kind === 'fu' && !lead.message_id && lead.thread_id) {
+        const moved = kind === 'fu' && movedSender(lead, s);
+        if (kind === 'fu' && !moved && !lead.message_id && lead.thread_id) {
           // older sends may lack the Message-ID; fetch it so the follow-up threads correctly for the buyer
           try {
             const t = await gm.listMessages('in:sent to:' + lead.email, 1);
@@ -192,7 +215,7 @@ async function draftList(env, gm, s, listId, room, result) {
           } catch (e) { if (e instanceof GmailAuthError || e instanceof BudgetError) throw e; }
         }
         const c = compose(lead, kind, s);
-        const d = await gm.createDraft(c.raw, kind === 'fu' ? lead.thread_id : undefined);
+        const d = await gm.createDraft(c.raw, kind === 'fu' && !moved ? lead.thread_id : undefined);
         const now2 = Date.now();
         if (kind === 'fu') {
           const u = await env.DB.prepare(`UPDATE leads SET status = 'fu_drafted', draft_id = ?, drafted_at = ?, draft_subject = ?, draft_body = ?, message_id = ?, updated_at = ? WHERE id = ? AND status = 'fu_drafting'`)
@@ -235,15 +258,18 @@ async function draftGone(env, gm, lead, isFu, s) {
   const r = await gm.listMessages('in:sent to:' + lead.email + ' after:' + since, 1);
   const m = r.messages && r.messages[0];
   const now = Date.now();
-  if (m && (!isFu || !lead.thread_id || m.threadId === lead.thread_id)) {
+  const moved = isFu && movedSender(lead, s);
+  if (m && (!isFu || moved || !lead.thread_id || m.threadId === lead.thread_id)) {
     await bump(env, sentTodayKey());
     if (isFu) {
-      await env.DB.prepare(`UPDATE leads SET status = 'fu_sent', followup_sent_at = ?, draft_id = NULL, updated_at = ? WHERE id = ?`).bind(now, now, lead.id).run();
+      await env.DB.prepare(`UPDATE leads SET status = 'fu_sent', followup_sent_at = ?, draft_id = NULL,
+          thread_id = CASE WHEN ? THEN ? ELSE thread_id END, sent_from = CASE WHEN ? THEN ? ELSE sent_from END, updated_at = ? WHERE id = ?`)
+        .bind(now, moved ? 1 : 0, m.threadId || null, moved ? 1 : 0, s.gmail_email, now, lead.id).run();
     } else {
       let mid = '';
       try { mid = headerOf(await gm.getMessage(m.id, 'metadata', ['Message-ID']), 'Message-ID'); } catch (e) { if (e instanceof GmailAuthError) throw e; }
-      await env.DB.prepare(`UPDATE leads SET status = 'sent', sent_at = ?, thread_id = ?, message_id = ?, followup_due = ?, draft_id = NULL, updated_at = ? WHERE id = ?`)
-        .bind(now, m.threadId, mid || null, addBusinessDays(now, parseInt(s.followup_days, 10) || 4), now, lead.id).run();
+      await env.DB.prepare(`UPDATE leads SET status = 'sent', sent_at = ?, thread_id = ?, message_id = ?, sent_from = ?, followup_due = ?, draft_id = NULL, updated_at = ? WHERE id = ?`)
+        .bind(now, m.threadId, mid || null, s.gmail_email, addBusinessDays(now, parseInt(s.followup_days, 10) || 4), now, lead.id).run();
     }
     await log(env, isFu ? 'Follow-up sent from Gmail' : 'Sent from Gmail', lead.email, '');
   } else {
@@ -272,13 +298,17 @@ export async function sendQueued(env, gm, s, max) {
       await bump(env, sentTodayKey());
       const t = Date.now();
       if (isFu) {
-        await env.DB.prepare(`UPDATE leads SET status = CASE status WHEN 'fu_sending' THEN 'fu_sent' ELSE status END, followup_sent_at = ?, draft_id = NULL, updated_at = ? WHERE id = ?`).bind(t, t, lead.id).run();
+        // a follow-up from a new account starts a new thread: watch that one for replies from now on
+        const moved = movedSender(lead, s) && msg.threadId ? 1 : 0;
+        await env.DB.prepare(`UPDATE leads SET status = CASE status WHEN 'fu_sending' THEN 'fu_sent' ELSE status END, followup_sent_at = ?, draft_id = NULL,
+            thread_id = CASE WHEN ? THEN ? ELSE thread_id END, sent_from = CASE WHEN ? THEN ? ELSE sent_from END, updated_at = ? WHERE id = ?`)
+          .bind(t, moved, msg.threadId || null, moved, s.gmail_email, t, lead.id).run();
       } else {
         let mid = '';
         try { mid = headerOf(await gm.getMessage(msg.id, 'metadata', ['Message-ID']), 'Message-ID'); }
         catch (e) { if (e instanceof GmailAuthError) throw e; }
-        await env.DB.prepare(`UPDATE leads SET status = 'sent', sent_at = ?, thread_id = ?, message_id = ?, followup_due = ?, draft_id = NULL, updated_at = ? WHERE id = ?`)
-          .bind(t, msg.threadId || null, mid || null, addBusinessDays(t, parseInt(s.followup_days, 10) || 4), t, lead.id).run();
+        await env.DB.prepare(`UPDATE leads SET status = 'sent', sent_at = ?, thread_id = ?, message_id = ?, sent_from = ?, followup_due = ?, draft_id = NULL, updated_at = ? WHERE id = ?`)
+          .bind(t, msg.threadId || null, mid || null, s.gmail_email, addBusinessDays(t, parseInt(s.followup_days, 10) || 4), t, lead.id).run();
       }
       await log(env, isFu ? 'Follow-up sent' : 'Sent', lead.email, '');
       sent++;

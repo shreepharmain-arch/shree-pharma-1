@@ -56,7 +56,44 @@ export async function ensureSchema(env) {
   if (!env.DB) throw new Error('The database is not connected. Check the D1 binding named DB.');
   await env.DB.batch(SCHEMA.map(s => env.DB.prepare(s)));
   await migrateLists(env);
+  await migrateSender(env);
+  await migrateTemplates(env);
   schemaReady = true;
+}
+
+// Remembers which Gmail account sent each lead's first email, so follow-ups still work after switching accounts.
+async function migrateSender(env) {
+  const cols = (await env.DB.prepare('PRAGMA table_info(leads)').all()).results.map(c => c.name);
+  if (cols.indexOf('sent_from') >= 0) return;
+  await env.DB.prepare('ALTER TABLE leads ADD COLUMN sent_from TEXT').run();
+  const g = await env.DB.prepare(`SELECT value FROM settings WHERE key = 'gmail_email'`).first();
+  const p = await env.DB.prepare(`SELECT value FROM settings WHERE key = 'gmail_prev'`).first();
+  const who = String((g && g.value) || (p && p.value) || '').trim().toLowerCase();
+  if (who) await env.DB.prepare('UPDATE leads SET sent_from = ? WHERE sent_from IS NULL AND thread_id IS NOT NULL').bind(who).run();
+}
+
+// One-time fixes to saved email templates: add the company email line, and stop promising shipping-inclusive prices.
+const TPL_FIXES = [
+  ['A clear written quote per vial, including shipping to {{Country}}', 'A clear written quote per vial (shipping quoted separately)'],
+  ["I'll reply with a price including shipping to {{Country}}, usually within one business day.", "I'll reply with a price per vial, usually within one business day."]
+];
+export function fixTemplate(t) {
+  let v = String(t || '');
+  for (const [a, b] of TPL_FIXES) v = v.split(a).join(b);
+  if (v.indexOf('{{MainEmail}}') < 0) v = v.replace(/^(WhatsApp: \{\{WhatsApp\}\})$/m, '$1\nCompany email: {{MainEmail}}');
+  return v;
+}
+async function migrateTemplates(env) {
+  const done = await env.DB.prepare(`SELECT value FROM settings WHERE key = 'tpl_fix_v2'`).first();
+  if (done) return;
+  const { results } = await env.DB.prepare(`SELECT key, value FROM settings WHERE key IN ('tpl_first_body', 'tpl_fu_body')`).all();
+  const stmts = [];
+  for (const r of results) {
+    const v = fixTemplate(r.value);
+    if (v !== r.value) stmts.push(env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(v, r.key));
+  }
+  stmts.push(env.DB.prepare(`INSERT OR REPLACE INTO settings(key, value) VALUES('tpl_fix_v2', '1')`));
+  await env.DB.batch(stmts);
 }
 
 // Lead lists: every import becomes its own list. Older leads (before lists existed) are split by country.
@@ -110,7 +147,7 @@ Product
 - Certificate of Analysis (CoA) from the manufacturer with every batch
 
 What we offer
-- A clear written quote per vial, including shipping to {{Country}}
+- A clear written quote per vial (shipping quoted separately)
 - Stock packed and ready to dispatch
 - Export documents prepared by us (GST registered, with an Import Export Code)
 
@@ -123,6 +160,7 @@ Best regards,
 {{CompanyName}}
 {{Address}}
 WhatsApp: {{WhatsApp}}
+Company email: {{MainEmail}}
 {{Website}}
 
 If you'd prefer not to hear from us, reply "unsubscribe" and we won't contact you again.`,
@@ -131,7 +169,7 @@ If you'd prefer not to hear from us, reply "unsubscribe" and we won't contact yo
 
 Following up on my note about Bacteriostatic Water for Injection USP 30 mL vials for {{Company}}.
 
-If you already source this diluent, we'd be glad to quote against your current supplier. Send the quantity and delivery city, and I'll reply with a price including shipping to {{Country}}, usually within one business day.
+If you already source this diluent, we'd be glad to quote against your current supplier. Send the quantity and delivery city, and I'll reply with a price per vial, usually within one business day.
 
 Brochure: {{BrochureLink}}
 
@@ -140,6 +178,7 @@ Best regards,
 {{CompanyName}}
 {{Address}}
 WhatsApp: {{WhatsApp}}
+Company email: {{MainEmail}}
 
 Reply "unsubscribe" and we won't contact you again.`
 };
@@ -149,6 +188,7 @@ export const EDITABLE = {
   your_name: 'Shivam',
   company_name: 'Shree Pharma',
   whatsapp: '+91 86696 66250',
+  main_email: 'shreepharma.in@gmail.com',
   address: '',
   website: '',
   brochure_link: '',
