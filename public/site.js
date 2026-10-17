@@ -4,8 +4,8 @@ const SITE = {
   email:    "shreepharma.in@gmail.com",
   phone:    "918669666250",   // country code + number, digits only (used for calls and WhatsApp)
   address:  "",               // e.g. "Nagpur, Maharashtra, India" (hidden while empty)
-  gst:      "",               // your GSTIN (hidden while empty)
-  iec:      "",               // your IEC code (hidden while empty)
+  gst:      "27ADHPM6491M1ZU", // your GSTIN (hidden while empty)
+  iec:      "0305066081",     // your IEC code (hidden while empty)
   brochure: "/brochure.pdf",
   formEndpoint: "/api/enquiry" // quote requests go straight into your dashboard
 };
